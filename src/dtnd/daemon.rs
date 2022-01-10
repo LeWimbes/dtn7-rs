@@ -68,10 +68,7 @@ pub async fn start_dtnd(cfg: DtnConfig) -> anyhow::Result<()> {
 
     info!("Work Dir: {:?}", (*CONFIG.lock()).workdir);
 
-    let db = (*CONFIG.lock()).db.clone();
-    info!("DB Backend: {}", db);
-
-    (*STORE.lock()) = crate::core::store::new(&db);
+    (*STORE.lock()) = crate::core::mem_store::InMemoryBundleStore::new().into();
 
     info!(
         "Announcement Interval: {}",

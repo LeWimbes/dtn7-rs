@@ -33,7 +33,6 @@ pub struct DtnConfig {
     pub peer_timeout: Duration,
     pub statics: Vec<DtnPeer>,
     pub workdir: PathBuf,
-    pub db: String,
     pub generate_status_reports: bool,
 }
 
@@ -100,9 +99,6 @@ impl From<PathBuf> for DtnConfig {
             std::env::current_dir().unwrap()
         };
         debug!("workdir: {:?}", dtncfg.workdir);
-
-        dtncfg.db = s.get_str("db").unwrap_or_else(|_| "mem".into());
-        debug!("db: {:?}", dtncfg.db);
 
         dtncfg.webport = s
             .get_int("webport")
@@ -235,7 +231,6 @@ impl DtnConfig {
             peer_timeout: "20s".parse::<humantime::Duration>().unwrap().into(),
             statics: Vec::new(),
             workdir: std::env::current_dir().unwrap(),
-            db: String::from("mem"),
             generate_status_reports: false,
         }
     }
@@ -259,7 +254,6 @@ impl DtnConfig {
         self.peer_timeout = cfg.peer_timeout;
         self.statics = cfg.statics;
         self.workdir = cfg.workdir;
-        self.db = cfg.db;
         self.generate_status_reports = cfg.generate_status_reports;
     }
 

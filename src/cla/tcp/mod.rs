@@ -22,7 +22,7 @@ use tokio::task::JoinHandle;
 use tokio::time::{self, timeout};
 use tokio::time::Duration;
 
-use crate::core::store::BundleStore;
+use crate::core::mem_store::BundleStore;
 use crate::utils::{CONFIG, STORE};
 
 use super::ConvergenceLayerAgent;

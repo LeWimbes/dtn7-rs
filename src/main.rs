@@ -37,7 +37,6 @@ async fn main() -> Result<(), std::io::Error> {
     cfg.host_eid = "dtn://n1".try_into().unwrap();
     cfg.endpoints.push("in".to_string());
     cfg.routing = "epidemic".into();
-    cfg.db = String::from("mem");
     cfg.clas.push(ClaConfig {
         id: "http".into(),
         port: None,

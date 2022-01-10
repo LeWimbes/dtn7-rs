@@ -8,8 +8,8 @@ use application_agent::ApplicationAgent;
 
 use crate::cla::CLAEnum;
 use crate::core::application_agent::ApplicationAgentEnum;
+use crate::core::mem_store::BundleStore;
 pub use crate::core::peer::{DtnPeer, PeerType};
-use crate::core::store::BundleStore;
 use crate::routing::RoutingAgent;
 use crate::routing::RoutingAgentsEnum;
 use crate::utils::{PEERS, STORE, store_get_metadata};
@@ -22,7 +22,7 @@ pub mod bundlepack;
 pub mod helpers;
 pub mod peer;
 pub mod processing;
-pub mod store;
+pub mod mem_store;
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct DtnStatistics {
