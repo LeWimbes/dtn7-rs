@@ -19,7 +19,6 @@ use self::processing::forward;
 
 pub mod application_agent;
 pub mod bundlepack;
-pub mod helpers;
 pub mod peer;
 pub mod processing;
 pub mod mem_store;

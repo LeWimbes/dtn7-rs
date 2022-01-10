@@ -1,11 +1,7 @@
 use std::{convert::TryInto, time::Duration};
 use std::collections::HashMap;
-use std::net::SocketAddr;
-use std::path::PathBuf;
 
 use bp7::EndpointID;
-use config::{Config, File};
-use log::debug;
 use rand::{Rng, thread_rng};
 use rand::distributions::Alphanumeric;
 use serde::Serialize;
@@ -31,7 +27,6 @@ pub struct DtnConfig {
     pub routing: String,
     pub peer_timeout: Duration,
     pub statics: Vec<DtnPeer>,
-    pub workdir: PathBuf,
     pub generate_status_reports: bool,
 }
 
@@ -41,135 +36,6 @@ pub fn rnd_node_name() -> String {
         .take(10)
         .map(char::from)
         .collect()
-}
-
-impl From<PathBuf> for DtnConfig {
-    fn from(item: PathBuf) -> Self {
-        let mut dtncfg = DtnConfig::new();
-        let mut s = Config::default();
-
-        debug!("Loading config: {}", item.to_str().unwrap());
-
-        // Start off by merging in the "default" configuration file
-        s.merge(File::new(item.to_str().unwrap(), config::FileFormat::Toml))
-            .unwrap();
-        dtncfg.debug = s.get_bool("debug").unwrap_or(false);
-        if dtncfg.debug {
-            //std::env::set_var("RUST_LOG", "dtn7=debug,dtnd=debug");
-        }
-        dtncfg.generate_status_reports = s.get_bool("generate_status_reports").unwrap_or(false);
-        dtncfg.unsafe_httpd = s.get_bool("unsafe_httpd").unwrap_or(false);
-        dtncfg.v4 = s.get_bool("ipv4").unwrap_or(true);
-        debug!("ipv4: {:?}", dtncfg.v4);
-        dtncfg.v6 = s.get_bool("ipv6").unwrap_or(false);
-        debug!("ipv6: {:?}", dtncfg.v6);
-        dtncfg.enable_period = s.get_bool("beacon-period").unwrap_or(false);
-        debug!("announcing period: {:?}", dtncfg.enable_period);
-        debug!("debug: {:?}", dtncfg.debug);
-        let nodeid = s.get_str("nodeid").unwrap_or_else(|_| rnd_node_name());
-        if nodeid.chars().all(char::is_alphanumeric) {
-            dtncfg.host_eid = if let Ok(number) = nodeid.parse::<u64>() {
-                format!("ipn:{}.0", number).try_into().unwrap()
-            } else {
-                format!("dtn://{}", nodeid).try_into().unwrap()
-            };
-        } else {
-            dtncfg.host_eid = nodeid.try_into().unwrap();
-            if !dtncfg.host_eid.is_node_id() {
-                panic!("Invalid node id!");
-            }
-        }
-        debug!("nodeid: {:?}", dtncfg.host_eid);
-        dtncfg.nodeid = dtncfg.host_eid.to_string();
-
-        dtncfg.routing = s.get_str("routing").unwrap_or(dtncfg.routing);
-        debug!("routing: {:?}", dtncfg.routing);
-
-        dtncfg.workdir = if let Ok(wd) = s.get_str("workdir") {
-            PathBuf::from(wd)
-        } else {
-            std::env::current_dir().unwrap()
-        };
-        debug!("workdir: {:?}", dtncfg.workdir);
-
-        dtncfg.webport = s
-            .get_int("webport")
-            .unwrap_or_else(|_| i64::from(dtncfg.webport)) as u16;
-        debug!("webport: {:?}", dtncfg.webport);
-
-        dtncfg.janitor_interval = if let Ok(interval) = s.get_str("core.janitor") {
-            humantime::parse_duration(&interval).unwrap_or_else(|_| Duration::new(0, 0))
-        } else {
-            dtncfg.janitor_interval
-        };
-        debug!("janitor: {:?}", dtncfg.janitor_interval);
-
-        dtncfg.announcement_interval = if let Ok(interval) = s.get_str("discovery.interval") {
-            humantime::parse_duration(&interval).unwrap_or_else(|_| Duration::new(0, 0))
-        } else {
-            dtncfg.announcement_interval
-        };
-        debug!("discovery-interval: {:?}", dtncfg.announcement_interval);
-
-        dtncfg.peer_timeout = if let Ok(interval) = s.get_str("discovery.peer-timeout") {
-            humantime::parse_duration(&interval).unwrap_or_else(|_| Duration::new(0, 0))
-        } else {
-            dtncfg.peer_timeout
-        };
-        debug!("discovery-peer-timeout: {:?}", dtncfg.peer_timeout);
-
-        if let Ok(peers) = s.get_array("statics.peers") {
-            for m in peers.iter() {
-                let peer: DtnPeer =
-                    crate::core::helpers::parse_peer_url(&m.clone().into_str().unwrap());
-                debug!("Peer: {:?}", peer);
-                dtncfg.statics.push(peer);
-            }
-        }
-        if let Ok(endpoints) = s.get_table("endpoints.local") {
-            for (_k, v) in endpoints.iter() {
-                let eid = v.clone().into_str().unwrap();
-                debug!("EID: {:?}", eid);
-                dtncfg.endpoints.push(eid);
-            }
-        }
-        if let Ok(services) = s.get_table("services.service") {
-            for (_k, v) in services.iter() {
-                let tab = v.clone().into_table().unwrap();
-                let service_tag: u8 =
-                    tab["tag"].clone().into_str().unwrap().parse().expect(
-                        "Encountered an error while parsing a service tag from config file",
-                    );
-                if dtncfg.services.contains_key(&service_tag) {
-                    let error = std::io::Error::new(
-                        std::io::ErrorKind::InvalidInput,
-                        format!(
-                            "Tags must be unique. You tried to use tag {} multiple times.",
-                            service_tag
-                        ),
-                    );
-                    panic!("ConfigError: {:?}: {}\n", error.kind(), error.to_string());
-                }
-                let service_payload = tab["payload"].clone().into_str().unwrap();
-                debug!("Added custom service: {:?}", service_tag);
-                dtncfg.services.insert(service_tag, service_payload);
-            }
-        }
-        if let Ok(discovery_destinations) = s.get_table("discovery_destinations.target") {
-            for (_k, v) in discovery_destinations.iter() {
-                let tab = v.clone().into_table().unwrap();
-                let destination = tab["destination"].clone().into_str().unwrap();
-                dtncfg
-                    .add_destination(destination.clone())
-                    .expect("Encountered an error while parsing discovery address to config");
-                debug!("Added discovery address: {:?}", destination);
-            }
-        }
-        dtncfg
-            .check_destinations()
-            .expect("Encountered an error while checking for the existence of discovery addresses");
-        dtncfg
-    }
 }
 
 impl DtnConfig {
@@ -194,7 +60,6 @@ impl DtnConfig {
             routing: "epidemic".into(),
             peer_timeout: "20s".parse::<humantime::Duration>().unwrap().into(),
             statics: Vec::new(),
-            workdir: std::env::current_dir().unwrap(),
             generate_status_reports: false,
         }
     }
@@ -216,38 +81,7 @@ impl DtnConfig {
         self.routing = cfg.routing;
         self.peer_timeout = cfg.peer_timeout;
         self.statics = cfg.statics;
-        self.workdir = cfg.workdir;
         self.generate_status_reports = cfg.generate_status_reports;
-    }
-
-    /// Helper function that adds discovery destinations to a config struct
-    ///
-    /// When provided with an IP address without port the default port 3003 is appended
-    pub fn add_destination(&mut self, destination: String) -> std::io::Result<()> {
-        let addr: SocketAddr = if destination.parse::<SocketAddr>().is_err() {
-            let destination = format!("{}:3003", destination);
-            destination
-                .parse()
-                .expect("Error: Unable to parse given IP address into SocketAddr")
-        } else {
-            destination
-                .parse()
-                .expect("Error: Unable to parse given IP address into SocketAddr")
-        };
-
-        match addr {
-            SocketAddr::V4(addr) => {
-                if self.v4 {
-                    self.discovery_destinations.insert(format!("{}", addr), 0);
-                }
-            }
-            SocketAddr::V6(addr) => {
-                if self.v6 {
-                    self.discovery_destinations.insert(format!("{}", addr), 0);
-                }
-            }
-        }
-        Ok(())
     }
 
     // If no discovery destination is specified via CLI or config use the default discovery destinations

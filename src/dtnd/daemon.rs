@@ -66,8 +66,6 @@ pub async fn start_dtnd(cfg: DtnConfig) -> anyhow::Result<()> {
     }
     info!("Local Node ID: {}", (*CONFIG.lock().unwrap()).host_eid);
 
-    info!("Work Dir: {:?}", (*CONFIG.lock().unwrap()).workdir);
-
     (*STORE.lock().unwrap()) = crate::core::mem_store::InMemoryBundleStore::new().into();
 
     info!(
