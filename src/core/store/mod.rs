@@ -1,18 +1,21 @@
-use crate::core::bundlepack::BundlePack;
-use crate::core::bundlepack::Constraint;
+use std::collections::HashSet;
+use std::fmt::Debug;
+
 use anyhow::Result;
 use bp7::Bundle;
 use enum_dispatch::enum_dispatch;
-use std::collections::HashSet;
-use std::fmt::Debug;
+
+pub use mem::InMemoryBundleStore;
+pub use sneakers::SneakersBundleStore;
+
+use crate::core::bundlepack::BundlePack;
+use crate::core::bundlepack::Constraint;
+
+pub use self::sled::SledBundleStore;
 
 mod mem;
 mod sled;
 mod sneakers;
-
-pub use self::sled::SledBundleStore;
-pub use mem::InMemoryBundleStore;
-pub use sneakers::SneakersBundleStore;
 
 #[enum_dispatch]
 #[derive(Debug)]

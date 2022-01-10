@@ -1,10 +1,12 @@
-use crate::cla::ConvergenceLayerAgent;
-use crate::CONFIG;
+use std::net::SocketAddr;
+
 use async_trait::async_trait;
 use bp7::ByteBuffer;
 use hyper::{Body, Method, Request};
 use log::{debug, error};
-use std::net::SocketAddr;
+
+use crate::cla::ConvergenceLayerAgent;
+use crate::utils::CONFIG;
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct HttpConvergenceLayer {

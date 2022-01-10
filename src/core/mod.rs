@@ -1,28 +1,28 @@
+use std::collections::HashMap;
+
+use bp7::EndpointID;
+use log::{error, info};
+use serde::{Deserialize, Serialize};
+
+use application_agent::ApplicationAgent;
+
+use crate::cla::CLAEnum;
+use crate::core::application_agent::ApplicationAgentEnum;
+pub use crate::core::peer::{DtnPeer, PeerType};
+use crate::core::store::BundleStore;
+use crate::routing::RoutingAgent;
+use crate::routing::RoutingAgentsEnum;
+use crate::utils::{PEERS, STORE, store_get_metadata};
+
+use self::bundlepack::BundlePack;
+use self::processing::forward;
+
 pub mod application_agent;
 pub mod bundlepack;
 pub mod helpers;
 pub mod peer;
 pub mod processing;
 pub mod store;
-
-use crate::cla::CLAEnum;
-pub use crate::core::peer::{DtnPeer, PeerType};
-use crate::core::store::BundleStore;
-use crate::routing::RoutingAgent;
-use crate::routing::RoutingAgentsEnum;
-use crate::{store_get_bundle, store_get_metadata};
-pub use crate::{store_has_item, store_push_bundle};
-use crate::{PEERS, STORE};
-use application_agent::ApplicationAgent;
-use bp7::EndpointID;
-use log::{error, info};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-use crate::core::application_agent::ApplicationAgentEnum;
-
-use self::bundlepack::BundlePack;
-use self::processing::forward;
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct DtnStatistics {
@@ -44,6 +44,7 @@ impl DtnStatistics {
         }
     }
 }
+
 #[derive(Debug)]
 pub struct DtnCore {
     pub endpoints: Vec<ApplicationAgentEnum>,

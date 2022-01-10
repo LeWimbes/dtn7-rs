@@ -1,12 +1,15 @@
-use super::BundleStore;
-use crate::core::bundlepack::{BundlePack, Constraint};
-use crate::CONFIG;
-use anyhow::{bail, Result};
-use bp7::Bundle;
-use log::{debug, error};
 use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::fmt::Debug;
+
+use anyhow::{bail, Result};
+use bp7::Bundle;
+use log::{debug, error};
+
+use crate::core::bundlepack::{BundlePack, Constraint};
+use crate::utils::CONFIG;
+
+use super::BundleStore;
 
 #[derive(Debug, Clone)]
 pub struct SledBundleStore {
@@ -109,7 +112,7 @@ impl BundleStore for SledBundleStore {
             .filter(|e| {
                 !e.has_constraint(Constraint::ReassemblyPending)
                     && (e.has_constraint(Constraint::ForwardPending)
-                        || e.has_constraint(Constraint::Contraindicated))
+                    || e.has_constraint(Constraint::Contraindicated))
             })
             .map(|k| k.id().into())
             .collect()

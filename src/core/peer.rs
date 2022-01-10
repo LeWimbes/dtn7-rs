@@ -1,10 +1,12 @@
-use crate::CONFIG;
-use bp7::EndpointID;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::net::IpAddr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+use bp7::EndpointID;
+use serde::{Deserialize, Serialize};
+
+use crate::utils::CONFIG;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
 pub enum PeerType {
@@ -23,6 +25,7 @@ impl From<IpAddr> for PeerAddress {
         PeerAddress::Ip(addr)
     }
 }
+
 impl From<String> for PeerAddress {
     fn from(addr: String) -> Self {
         PeerAddress::Generic(addr)
@@ -121,7 +124,7 @@ impl DtnPeer {
                 .expect("time went backwards")
                 .as_secs();
             now - self.last_contact < timeout
-        // Else if a received beacon contains a BeaconPeriod remove this peer after 2 * received BeaconPeriod
+            // Else if a received beacon contains a BeaconPeriod remove this peer after 2 * received BeaconPeriod
         } else {
             let now = SystemTime::now()
                 .duration_since(UNIX_EPOCH)

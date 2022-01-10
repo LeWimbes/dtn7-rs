@@ -131,6 +131,7 @@ pub(crate) enum SessTermReasonCode {
     /// No resources available.
     ResourceExhaustion = 0x05,
 }
+
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct SessInitData {
     pub keepalive: u16,
@@ -154,11 +155,13 @@ pub(crate) struct XferAckData {
     pub tid: u64,
     pub len: u64,
 }
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct XferRefuseData {
     pub reason: XferRefuseReasonCode,
     pub tid: u64,
 }
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct SessTermData {
     pub flags: SessTermFlags,

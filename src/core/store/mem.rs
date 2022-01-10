@@ -1,10 +1,13 @@
-use super::BundleStore;
-use crate::core::bundlepack::{BundlePack, Constraint};
+use std::collections::{HashMap, HashSet};
+use std::fmt::Debug;
+
 use anyhow::{bail, Result};
 use bp7::Bundle;
 use log::debug;
-use std::collections::{HashMap, HashSet};
-use std::fmt::Debug;
+
+use crate::core::bundlepack::{BundlePack, Constraint};
+
+use super::BundleStore;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct InMemoryBundleStore {
@@ -77,7 +80,7 @@ impl BundleStore for InMemoryBundleStore {
             .filter(|&e| {
                 !e.has_constraint(Constraint::ReassemblyPending)
                     && (e.has_constraint(Constraint::ForwardPending)
-                        || e.has_constraint(Constraint::Contraindicated))
+                    || e.has_constraint(Constraint::Contraindicated))
             })
             .map(|b| b.id().into())
             .collect()

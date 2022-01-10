@@ -1,12 +1,13 @@
-use crate::store_remove;
-use crate::store_update_metadata;
+use std::collections::HashSet;
+use std::fmt;
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use anyhow::Result;
 use bp7::{Bundle, EndpointID};
 use log::warn;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
-use std::fmt;
-use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::utils::{store_remove, store_update_metadata};
 
 /// Constraint is a retention constraint as defined in the subsections of the
 /// fifth chapter of draft-ietf-dtn-bpbis-12.
@@ -83,6 +84,7 @@ impl From<Bundle> for BundlePack {
         }
     }
 }
+
 /// Create from a given bundle.
 impl From<&Bundle> for BundlePack {
     fn from(bundle: &Bundle) -> Self {

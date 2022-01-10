@@ -1,18 +1,21 @@
-pub mod epidemic;
-pub mod flooding;
-pub mod sink;
+use std::fmt::Debug;
+use std::fmt::Display;
 
-use crate::cla::ClaSender;
-use crate::core::bundlepack::BundlePack;
 use bp7::Bundle;
 use bp7::EndpointID;
 use derive_more::*;
 use enum_dispatch::enum_dispatch;
+
 use epidemic::EpidemicRoutingAgent;
 use flooding::FloodingRoutingAgent;
 use sink::SinkRoutingAgent;
-use std::fmt::Debug;
-use std::fmt::Display;
+
+use crate::cla::ClaSender;
+use crate::core::bundlepack::BundlePack;
+
+pub mod epidemic;
+pub mod flooding;
+pub mod sink;
 
 pub enum RoutingNotifcation<'a> {
     SendingFailed(&'a str, &'a str),

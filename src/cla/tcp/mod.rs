@@ -1,36 +1,38 @@
-pub mod net;
-pub mod proto;
-
-use self::net::*;
-
-use super::ConvergenceLayerAgent;
-use async_trait::async_trait;
-use bp7::{Bundle, ByteBuffer};
-use futures::lock::Mutex;
-//use futures_util::stream::StreamExt;
-use log::{debug, error, info, warn};
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::net::SocketAddr;
 use std::ops::DerefMut;
 use std::sync::Arc;
+
+use anyhow::anyhow;
+use anyhow::bail;
+use async_trait::async_trait;
+use bp7::{Bundle, ByteBuffer};
+use bytes::Bytes;
+use futures::lock::Mutex;
+//use futures_util::stream::StreamExt;
+use log::{debug, error, info, warn};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
+use tokio::net::TcpListener;
+use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 use tokio::time::{self, timeout};
+use tokio::time::Duration;
+
+use crate::core::store::BundleStore;
+use crate::utils::{CONFIG, STORE};
+
+use super::ConvergenceLayerAgent;
 //use std::net::TcpStream;
 use super::tcp::proto::*;
-use crate::core::store::BundleStore;
-use crate::CONFIG;
-use crate::STORE;
-use anyhow::anyhow;
-use anyhow::bail;
-use bytes::Bytes;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
-use tokio::net::TcpStream;
-use tokio::time::Duration;
+
+use self::net::*;
+
+pub mod net;
+pub mod proto;
 
 // TODO
 // Implemented draft version 24
@@ -376,7 +378,7 @@ impl TcpClReceiver {
                 Duration::from_secs((self.timeout * 2).into()),
                 TcpClPacket::deserialize(&mut self.rx_tcp),
             )
-            .await
+                .await
             {
                 Ok(parsed_packet) => match parsed_packet {
                     Ok(packet) => {
@@ -397,7 +399,7 @@ impl TcpClReceiver {
                         flags: SessTermFlags::empty(),
                         reason: SessTermReasonCode::IdleTimeout,
                     }))
-                    .await;
+                        .await;
                 }
             }
         }
@@ -419,7 +421,7 @@ impl TcpClSender {
                 Duration::from_secs(self.timeout.into()),
                 self.rx_session_outgoing.recv(),
             )
-            .await
+                .await
             {
                 Ok(packet) => {
                     if let Some(packet) = packet {
@@ -508,7 +510,7 @@ impl TcpConnection {
     }
 
     /// Establish a tcp session on this connection and insert it into a session list.
-    async fn connect(mut self, sessions: &mut impl DerefMut<Target = SessionMap>) {
+    async fn connect(mut self, sessions: &mut impl DerefMut<Target=SessionMap>) {
         // Phase 1
         debug!("Exchanging contact header, {}", self.addr);
         if let Err(err) = self.exchange_contact_header().await {
@@ -606,7 +608,7 @@ impl TcpConvergenceLayer {
         &self,
         addr: &SocketAddr,
         ready: &[ByteBuffer],
-        sessions: &mut impl DerefMut<Target = SessionMap>,
+        sessions: &mut impl DerefMut<Target=SessionMap>,
     ) -> anyhow::Result<bool> {
         if let Some(sender) = sessions.get(addr) {
             debug!("Using existing session for {}", addr);
@@ -709,13 +711,15 @@ impl std::fmt::Display for TcpConvergenceLayer {
 mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
-    use super::proto::XferSegData;
-    use crate::cla::tcp::net::TcpClPacket;
-    use crate::cla::tcp::proto::SessInitData;
-    use crate::cla::tcp::proto::XferSegmentFlags;
     use anyhow::bail;
     use bytes::Bytes;
     use futures::executor::block_on;
+
+    use crate::cla::tcp::net::TcpClPacket;
+    use crate::cla::tcp::proto::SessInitData;
+    use crate::cla::tcp::proto::XferSegmentFlags;
+
+    use super::proto::XferSegData;
 
     pub(crate) fn generate_xfer_segments(
         config: &SessInitData,
@@ -799,6 +803,7 @@ mod tests {
 
         Ok(segs)
     }
+
     #[test]
     fn gen_xfer_segs_single_seg() {
         let segs =

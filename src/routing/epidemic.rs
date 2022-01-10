@@ -1,10 +1,13 @@
-use super::RoutingAgent;
+use std::collections::{HashMap, HashSet};
+
+use log::debug;
+
 use crate::cla::ClaSender;
 use crate::core::bundlepack::BundlePack;
 use crate::routing::RoutingNotifcation;
-use crate::PEERS;
-use log::debug;
-use std::collections::{HashMap, HashSet};
+use crate::utils::PEERS;
+
+use super::RoutingAgent;
 
 /// Simple epidemic routing.
 /// All bundles are sent to all known peers once via all CLAs.
@@ -56,11 +59,13 @@ impl EpidemicRoutingAgent {
         }
     }
 }
+
 impl std::fmt::Display for EpidemicRoutingAgent {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "EpidemicRoutingAgent")
     }
 }
+
 impl RoutingAgent for EpidemicRoutingAgent {
     fn notify(&mut self, notification: RoutingNotifcation) {
         match notification {

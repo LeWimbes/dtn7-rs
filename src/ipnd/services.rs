@@ -1,11 +1,13 @@
 extern crate alloc;
+
 use core::fmt;
-use log::info;
-use serde::de::{SeqAccess, Visitor};
-use serde::ser::{SerializeSeq, Serializer};
-use serde::{de, Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
+
+use log::info;
+use serde::{de, Deserialize, Deserializer, Serialize};
+use serde::de::{SeqAccess, Visitor};
+use serde::ser::{Serializer, SerializeSeq};
 
 /// Struct representing the ServiceBlock used in Beacons to advertise additional services
 ///
@@ -19,11 +21,13 @@ pub struct ServiceBlock {
     clas: Vec<(String, Option<u16>)>,
     services: HashMap<u8, Vec<u8>>,
 }
+
 impl Default for ServiceBlock {
     fn default() -> Self {
         Self::new()
     }
 }
+
 impl ServiceBlock {
     /// Creates a new ServiceBlock without any services or clas
     pub fn new() -> ServiceBlock {
@@ -219,7 +223,7 @@ impl std::fmt::Display for ServiceBlock {
                         .expect("Couldn't parse byte array into string");
                     let address: Vec<&str> = message.split_whitespace().collect();
                     format!("{}. Tag = {} Address service. Street {}; House Number {}; Postal Number {}; City {}; Country Code {}\n",
-                            counter, tag, address[0],address[1],address[2],address[3],address[4])
+                            counter, tag, address[0], address[1], address[2], address[3], address[4])
                 }
                 _ => {
                     info!("Unknown Service encountered. Compare senders IPND version with this one to check for incompatibilities.");
@@ -236,8 +240,8 @@ impl std::fmt::Display for ServiceBlock {
 
 impl Serialize for ServiceBlock {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         // If the ServiceBlock is empty there is nothing to serialize, else the amount of elements to serialize is equal to
         // the amount of elements inside both vectors of the ServiceBlock
@@ -253,8 +257,8 @@ impl Serialize for ServiceBlock {
 
 impl<'de> Deserialize<'de> for ServiceBlock {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         struct ServiceBlockVisitor;
 
@@ -265,8 +269,8 @@ impl<'de> Deserialize<'de> for ServiceBlock {
                 formatter.write_str("ServiceBlock")
             }
             fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
-            where
-                V: SeqAccess<'de>,
+                where
+                    V: SeqAccess<'de>,
             {
                 if seq.size_hint().unwrap() < 1 {
                     Ok(ServiceBlock::new())

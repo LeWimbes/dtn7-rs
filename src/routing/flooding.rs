@@ -1,7 +1,8 @@
-use super::RoutingAgent;
 use crate::cla::ClaSender;
 use crate::core::bundlepack::BundlePack;
-use crate::PEERS;
+use crate::utils::PEERS;
+
+use super::RoutingAgent;
 
 /// Simple flooding-basic routing.
 /// All bundles are sent to all known peers again and again.
@@ -13,6 +14,7 @@ impl FloodingRoutingAgent {
         FloodingRoutingAgent {}
     }
 }
+
 impl std::fmt::Display for FloodingRoutingAgent {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "FloodingRoutingAgent")

@@ -1,14 +1,16 @@
-use crate::core::DtnPeer;
-use bp7::EndpointID;
-use config::{Config, File};
-use log::debug;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
-use serde::Serialize;
+use std::{convert::TryInto, time::Duration};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use std::{convert::TryInto, time::Duration};
+
+use bp7::EndpointID;
+use config::{Config, File};
+use log::debug;
+use rand::{Rng, thread_rng};
+use rand::distributions::Alphanumeric;
+use serde::Serialize;
+
+use crate::core::DtnPeer;
 
 #[derive(Debug, Default, Clone, Serialize)]
 pub struct DtnConfig {
@@ -314,7 +316,7 @@ impl DtnConfig {
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
                         String::from("Only IP destinations supported at the moment"),
-                    ))
+                    ));
                 }
             }
         }

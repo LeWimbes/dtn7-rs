@@ -1,15 +1,15 @@
 use std::convert::TryFrom;
 
-use super::{httpd, janitor};
+use bp7::EndpointID;
+use log::{error, info};
+
 use crate::cla::ConvergenceLayerAgent;
-use crate::cla_add;
 use crate::core::application_agent::SimpleApplicationAgent;
 use crate::dtnconfig::DtnConfig;
 use crate::ipnd::neighbour_discovery;
-use crate::peers_add;
-use crate::{CONFIG, DTNCORE, STORE};
-use bp7::EndpointID;
-use log::{error, info};
+use crate::utils::{cla_add, CONFIG, DTNCORE, peers_add, STORE};
+
+use super::{httpd, janitor};
 
 /*
 use crate::core::core::DtnCore;

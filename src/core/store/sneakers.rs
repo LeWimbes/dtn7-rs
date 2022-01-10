@@ -1,13 +1,16 @@
-use super::BundleStore;
-use crate::core::bundlepack::{self, BundlePack, Constraint};
-use crate::CONFIG;
+use std::collections::HashSet;
+use std::convert::TryFrom;
+use std::fmt::Debug;
+
 use anyhow::{bail, Result};
 use bp7::{Bundle, EndpointID};
 use d7sneakers::{Constraints, SneakerWorld};
 use log::debug;
-use std::collections::HashSet;
-use std::convert::TryFrom;
-use std::fmt::Debug;
+
+use crate::core::bundlepack::{self, BundlePack, Constraint};
+use crate::utils::CONFIG;
+
+use super::BundleStore;
 
 #[derive(Debug, Clone)]
 pub struct SneakersBundleStore {
@@ -38,6 +41,7 @@ impl SneakersBundleStore {
         Ok(EndpointID::try_from(eid_string)?)
     }
 }
+
 impl BundleStore for SneakersBundleStore {
     fn push(&mut self, bndl: &Bundle) -> Result<()> {
         // TODO: check for duplicates, update, remove etc
@@ -166,6 +170,7 @@ impl Default for SneakersBundleStore {
         Self::new()
     }
 }
+
 fn convert_constraints_to_hashset(constraints: d7sneakers::Constraints) -> HashSet<Constraint> {
     let mut c = HashSet::new();
     if constraints.contains(Constraints::DISPATCH_PENDING) {

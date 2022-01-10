@@ -1,11 +1,12 @@
 use core::fmt;
-use serde::de::{SeqAccess, Visitor};
-use serde::ser::{SerializeSeq, Serializer};
-use serde::{de, Deserialize, Deserializer, Serialize};
 use std::{fmt::Debug, time::Duration};
 
-use crate::ipnd::services::ServiceBlock;
 use bp7::{bundle::Block, ByteBuffer, EndpointID};
+use serde::{de, Deserialize, Deserializer, Serialize};
+use serde::de::{SeqAccess, Visitor};
+use serde::ser::{Serializer, SerializeSeq};
+
+use crate::ipnd::services::ServiceBlock;
 
 // Draft IPND version is 0x04
 // This implementation uses more enhanced and additional features, also the bundle protocol version
@@ -161,10 +162,10 @@ impl std::fmt::Display for Beacon {
         let temp = format!("{:010b}", self.flags);
         let output = if self.beacon_period.is_some() {
             format!("Version: {:#x}\tFlags: {}\tBeaconSequenceNumber: {}\nEID: {}\nServiceBlock:\n{}\nBeaconPeriod: {:#?}",
-        self.version, temp, self.beacon_sequence_number, self.eid, self.service_block, self.beacon_period.unwrap())
+                    self.version, temp, self.beacon_sequence_number, self.eid, self.service_block, self.beacon_period.unwrap())
         } else {
             format!("Version: {:#x}\tFlags: {}\tBeaconSequenceNumber: {}\nEID: {}\nServiceBlock:\n{}\nBeaconPeriod: None",
-        self.version, temp, self.beacon_sequence_number, self.eid, self.service_block)
+                    self.version, temp, self.beacon_sequence_number, self.eid, self.service_block)
         };
 
         write!(f, "{}", output)
@@ -173,8 +174,8 @@ impl std::fmt::Display for Beacon {
 
 impl Serialize for Beacon {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
+        where
+            S: Serializer,
     {
         let num_elems = if self.beacon_period.is_some() && !self.service_block.is_empty() {
             // Amount of elements inside a Beacon with a BeaconPeriod
@@ -212,8 +213,8 @@ impl Serialize for Beacon {
 
 impl<'de> Deserialize<'de> for Beacon {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
+        where
+            D: Deserializer<'de>,
     {
         struct BeaconVisitor;
 
@@ -225,8 +226,8 @@ impl<'de> Deserialize<'de> for Beacon {
             }
 
             fn visit_seq<V>(self, mut seq: V) -> Result<Self::Value, V::Error>
-            where
-                V: SeqAccess<'de>,
+                where
+                    V: SeqAccess<'de>,
             {
                 let version = seq
                     .next_element()?
@@ -253,8 +254,8 @@ impl<'de> Deserialize<'de> for Beacon {
                         beacon_period: None,
                     })
 
-                // If there is exactly one element left inside the sequence it has to be either a BeaconPeriod or a ServiceBlock
-                // Check for it by looking at the flags
+                    // If there is exactly one element left inside the sequence it has to be either a BeaconPeriod or a ServiceBlock
+                    // Check for it by looking at the flags
                 } else if seq.size_hint().unwrap() == 1 {
                     if (flags & SERVICE_BLOCK_PRESENT) == SERVICE_BLOCK_PRESENT {
                         Ok(Beacon {

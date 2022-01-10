@@ -1,38 +1,36 @@
+use std::collections::HashMap;
+use std::convert::{TryFrom, TryInto};
+use std::net::SocketAddr;
+
+use anyhow::Result;
+use async_trait::async_trait;
+use axum::{
+    extract::{self, connect_info::ConnectInfo, extractor_middleware, RequestParts},
+    Router,
+    routing::{get, post},
+};
+use axum::extract::ws::WebSocketUpgrade;
+use axum::response::Html;
+use bp7::dtntime::CreationTimestamp;
+use bp7::EndpointID;
+use bp7::flags::BlockControlFlags;
+use bp7::flags::BundleControlFlags;
+use bp7::helpers::rnd_bundle;
+use http::StatusCode;
+use humansize::{file_size_opts, FileSize};
+use log::{debug, info, warn};
+use serde::Serialize;
+use tinytemplate::TinyTemplate;
+
 use crate::core::application_agent::ApplicationAgent;
 use crate::core::application_agent::SimpleApplicationAgent;
 use crate::core::bundlepack::Constraint;
 use crate::core::helpers::rnd_peer;
 use crate::core::peer::PeerType;
 use crate::core::store::BundleStore;
-use crate::peers_count;
 use crate::DtnConfig;
-use crate::CONFIG;
-use crate::DTNCORE;
-use crate::PEERS;
-use crate::STATS;
-use crate::STORE;
-use anyhow::Result;
-use async_trait::async_trait;
-use axum::extract::ws::WebSocketUpgrade;
-use axum::response::Html;
-use axum::{
-    extract::{self, connect_info::ConnectInfo, extractor_middleware, RequestParts},
-    routing::{get, post},
-    Router,
-};
-use bp7::dtntime::CreationTimestamp;
-use bp7::flags::BlockControlFlags;
-use bp7::flags::BundleControlFlags;
-use bp7::helpers::rnd_bundle;
-use bp7::EndpointID;
-use http::StatusCode;
-use humansize::{file_size_opts, FileSize};
-use log::{debug, info, warn};
-use serde::Serialize;
-use std::collections::HashMap;
-use std::convert::{TryFrom, TryInto};
-use std::net::SocketAddr;
-use tinytemplate::TinyTemplate;
+use crate::utils::{CONFIG, DTNCORE, PEERS, peers_count, STATS, STORE};
+
 /*
 
 #[get("/ws", guard = "fn_guard_localhost")]
@@ -48,8 +46,8 @@ struct RequireLocalhost;
 
 #[async_trait]
 impl<B> extract::FromRequest<B> for RequireLocalhost
-where
-    B: Send,
+    where
+        B: Send,
 {
     type Rejection = StatusCode;
 
@@ -93,6 +91,7 @@ struct PeersContext<'a> {
     config: &'a DtnConfig,
     peers: &'a [PeerEntry],
 }
+
 #[derive(Serialize)]
 struct PeerEntry {
     name: String,
@@ -111,6 +110,7 @@ struct BundlesContext<'a> {
     config: &'a DtnConfig,
     bundles: &'a [BundleInfo],
 }
+
 #[derive(Serialize)]
 struct BundleEntry {
     bid: String,
@@ -221,6 +221,7 @@ async fn status_node_id() -> String {
 async fn status_eids() -> String {
     serde_json::to_string_pretty(&(*DTNCORE.lock()).eids()).unwrap()
 }
+
 //#[get("/status/bundles")]
 async fn status_bundles() -> String {
     let bids: Vec<String> = (*STORE.lock())
@@ -231,24 +232,29 @@ async fn status_bundles() -> String {
         .collect();
     serde_json::to_string_pretty(&bids).unwrap()
 }
+
 //#[get("/status/bundles_dest")]
 async fn status_bundles_dest() -> String {
     serde_json::to_string_pretty(&(*DTNCORE.lock()).bundle_names()).unwrap()
 }
+
 //#[get("/status/store", guard = "fn_guard_localhost")]
 async fn status_store() -> String {
     serde_json::to_string_pretty(&(*STORE.lock()).bundles_status()).unwrap()
 }
+
 //#[get("/status/peers")]
 async fn status_peers() -> String {
     let peers = &(*PEERS.lock()).clone();
     serde_json::to_string_pretty(&peers).unwrap()
 }
+
 //#[get("/status/info")]
 async fn status_info() -> String {
     let stats = &(*STATS.lock()).clone();
     serde_json::to_string_pretty(&stats).unwrap()
 }
+
 //#[get("/cts", guard = "fn_guard_localhost")]
 async fn get_creation_timestamp() -> String {
     let cts = bp7::CreationTimestamp::now();
@@ -620,7 +626,7 @@ pub async fn spawn_httpd() -> Result<()> {
     } else {
         hyper::Server::bind(&format!("[::]:{}", port).parse()?)
     }
-    .serve(app.into_make_service_with_connect_info::<SocketAddr, _>());
+        .serve(app.into_make_service_with_connect_info::<SocketAddr, _>());
     server.await?;
     Ok(())
 }

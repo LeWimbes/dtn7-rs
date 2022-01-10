@@ -1,29 +1,22 @@
-use crate::cla;
-use crate::core::bundlepack::*;
-use crate::core::*;
-use crate::peer_find_by_remote;
-use crate::peers_cla_for_node;
-use crate::routing::RoutingNotifcation;
-use crate::routing_notify;
-use crate::store_push_bundle;
-use crate::store_remove;
-use crate::CONFIG;
-use crate::DTNCORE;
-use crate::{is_local_node_id, STATS};
-
-use bp7::administrative_record::*;
-use bp7::bundle::*;
-use bp7::flags::*;
-use bp7::CanonicalData;
-use bp7::BUNDLE_AGE_BLOCK;
-
-use anyhow::{bail, Result};
-use log::{debug, info, warn};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
+
+use anyhow::{bail, Result};
+use bp7::administrative_record::*;
+use bp7::bundle::*;
+use bp7::BUNDLE_AGE_BLOCK;
+use bp7::CanonicalData;
+use bp7::flags::*;
+use log::{debug, info, warn};
 use tokio::sync::mpsc::channel;
+
+use crate::cla;
+use crate::core::*;
+use crate::core::bundlepack::*;
+use crate::routing::RoutingNotifcation;
+use crate::utils::{CONFIG, DTNCORE, is_local_node_id, peer_find_by_remote, peers_cla_for_node, routing_notify, SENDERTASK, STATS, store_get_bundle, store_get_metadata, store_has_item, store_push_bundle, store_remove};
 
 // transmit an outbound bundle.
 pub async fn send_bundle(bndl: Bundle) {
@@ -39,7 +32,7 @@ pub async fn send_bundle(bndl: Bundle) {
 }
 
 pub fn send_through_task(bndl: Bundle) {
-    let mut stask = crate::SENDERTASK.lock();
+    let mut stask = SENDERTASK.lock();
     if stask.is_none() {
         let (tx, rx) = channel(50);
         tokio::spawn(sender_task(rx));
@@ -52,7 +45,7 @@ pub fn send_through_task(bndl: Bundle) {
 }
 
 pub async fn send_through_task_async(bndl: Bundle) {
-    let mut stask = crate::SENDERTASK.lock();
+    let mut stask = SENDERTASK.lock();
     if stask.is_none() {
         let (tx, rx) = channel(50);
         tokio::spawn(sender_task(rx));
@@ -64,6 +57,7 @@ pub async fn send_through_task_async(bndl: Bundle) {
         warn!("Transmission failed: {}", err);
     }
 }
+
 pub async fn sender_task(mut rx: tokio::sync::mpsc::Receiver<Bundle>) {
     while let Some(bndl) = rx.recv().await {
         debug!("sending bundle through task channel");
@@ -225,6 +219,7 @@ async fn handle_hop_count_block(mut bundle: Bundle) -> Result<Bundle> {
     }
     Ok(bundle)
 }
+
 async fn handle_primary_lifetime(bundle: &Bundle) -> Result<()> {
     if bundle.primary.is_lifetime_exceeded() {
         warn!(
@@ -237,6 +232,7 @@ async fn handle_primary_lifetime(bundle: &Bundle) -> Result<()> {
     }
     Ok(())
 }
+
 /// UpdateBundleAge updates the bundle's Bundle Age block based on its reception
 /// timestamp, if such a block exists.
 pub fn update_bundle_age(bundle: &mut Bundle) -> Option<u64> {
@@ -260,6 +256,7 @@ pub fn update_bundle_age(bundle: &mut Bundle) -> Option<u64> {
     }
     None
 }
+
 async fn handle_bundle_age_block(mut bundle: Bundle) -> Result<Bundle> {
     if let Some(age) = update_bundle_age(&mut bundle) {
         if std::time::Duration::from_micros(age) >= bundle.primary.lifetime {
@@ -293,6 +290,7 @@ async fn handle_previous_node_block(mut bundle: Bundle) -> Result<Bundle> {
     }
     Ok(bundle)
 }
+
 // forward a bundle pack's bundle to another node.
 pub async fn forward(mut bp: BundlePack) -> Result<()> {
     let bpid = bp.id().to_string();
@@ -461,6 +459,7 @@ pub async fn local_delivery(mut bp: BundlePack) -> Result<()> {
     bp.sync()?;
     Ok(())
 }
+
 pub fn contraindicated(mut bp: BundlePack) -> Result<()> {
     info!("Bundle marked for contraindication: {}", bp.id());
     bp.add_constraint(Constraint::Contraindicated);

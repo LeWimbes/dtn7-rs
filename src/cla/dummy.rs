@@ -1,7 +1,8 @@
-use super::ConvergenceLayerAgent;
 use async_trait::async_trait;
 use bp7::ByteBuffer;
 use log::debug;
+
+use super::ConvergenceLayerAgent;
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct DummyConvergenceLayer {}
@@ -11,6 +12,7 @@ impl DummyConvergenceLayer {
         DummyConvergenceLayer {}
     }
 }
+
 #[async_trait]
 impl ConvergenceLayerAgent for DummyConvergenceLayer {
     async fn setup(&mut self) {}

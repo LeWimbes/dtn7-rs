@@ -1,23 +1,25 @@
-use crate::cla::ConvergenceLayerAgent;
-use async_trait::async_trait;
-use bp7::{Bundle, ByteBuffer};
-use bytes::buf::Buf;
-use bytes::{BufMut, BytesMut};
 use core::convert::TryFrom;
-use futures_util::stream::StreamExt;
-use lazy_static::lazy_static;
-use log::{debug, error, info};
-use parking_lot::Mutex;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Write;
 use std::net::SocketAddr;
 use std::net::SocketAddrV4;
 use std::net::TcpStream;
 use std::time::Instant;
+
+use async_trait::async_trait;
+use bp7::{Bundle, ByteBuffer};
+use bytes::{BufMut, BytesMut};
+use bytes::buf::Buf;
+use futures_util::stream::StreamExt;
+use lazy_static::lazy_static;
+use log::{debug, error, info};
+use parking_lot::Mutex;
+use serde::{Deserialize, Serialize};
 use tokio::io;
 use tokio::net::TcpListener;
 use tokio_util::codec::{Decoder, Encoder, Framed};
+
+use crate::cla::ConvergenceLayerAgent;
 
 lazy_static! {
     pub static ref MTCP_CONNECTIONS: Mutex<HashMap<SocketAddr, TcpStream>> =
@@ -130,6 +132,7 @@ impl Default for MPDUCodec {
         Self::new()
     }
 }
+
 impl Encoder<MPDU> for MPDUCodec {
     type Error = io::Error;
 
@@ -157,7 +160,7 @@ impl Decoder for MPDUCodec {
             ));
         };
         if let Some(expected_pos) =
-            cbor_hdr_len(buf[0]).checked_add(cbor_parse_byte_string_len(&buf[0..10]) as usize)
+        cbor_hdr_len(buf[0]).checked_add(cbor_parse_byte_string_len(&buf[0..10]) as usize)
         {
             if let Some(expected_pos) = expected_pos.checked_sub(1) {
                 if expected_pos < buf.len() {

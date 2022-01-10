@@ -1,18 +1,22 @@
+use std::fmt::{Debug, Display};
+
+use async_trait::async_trait;
+use bp7::ByteBuffer;
+use derive_more::*;
+use enum_dispatch::enum_dispatch;
+
+use dummy::DummyConvergenceLayer;
+use mtcp::MtcpConvergenceLayer;
+use tcp::TcpConvergenceLayer;
+
+use crate::{core::peer::PeerAddress, dtnconfig::ClaConfig};
+
+use self::http::HttpConvergenceLayer;
+
 pub mod dummy;
 pub mod http;
 pub mod mtcp;
 pub mod tcp;
-
-use self::http::HttpConvergenceLayer;
-use crate::{core::peer::PeerAddress, dtnconfig::ClaConfig};
-use async_trait::async_trait;
-use bp7::ByteBuffer;
-use derive_more::*;
-use dummy::DummyConvergenceLayer;
-use enum_dispatch::enum_dispatch;
-use mtcp::MtcpConvergenceLayer;
-use std::fmt::{Debug, Display};
-use tcp::TcpConvergenceLayer;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct ClaSender {
@@ -20,6 +24,7 @@ pub struct ClaSender {
     pub port: Option<u16>,
     pub agent: String,
 }
+
 impl ClaSender {
     pub async fn transfer(&self, ready: &[ByteBuffer]) -> bool {
         let sender = new(&ClaConfig {

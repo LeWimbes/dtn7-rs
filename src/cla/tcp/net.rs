@@ -1,10 +1,11 @@
 use std::io::Cursor;
 
-use super::proto::*;
 use log::{debug, error, warn};
 use num_traits::FromPrimitive;
 use thiserror::Error;
 use tokio::io::{self, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+
+use super::proto::*;
 
 const MINIMUM_EXTENSION_ITEM_SIZE: u32 = 5;
 
@@ -109,7 +110,7 @@ impl TcpClPacket {
                                 let mut data = vec![0; item_length as usize];
                                 reader.read_exact(&mut data).await?;
                                 if let Some(item_type) =
-                                    TransferExtensionItemType::from_u16(item_type)
+                                TransferExtensionItemType::from_u16(item_type)
                                 {
                                     let transfer_extension = TransferExtensionItem {
                                         flags: TransferExtensionItemFlags::from_bits_truncate(flag),

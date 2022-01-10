@@ -1,17 +1,18 @@
+use std::collections::HashMap;
+use std::io;
+use std::net::SocketAddr;
+
+use anyhow::Result;
+use log::{debug, error, info};
+use socket2::{Domain, Socket, Type};
+use tokio::net::UdpSocket;
+use tokio::time::interval;
+
 use crate::cla::ConvergenceLayerAgent;
 use crate::core::{DtnPeer, PeerType};
 use crate::ipnd::{beacon::Beacon, services::*};
 use crate::routing::RoutingNotifcation;
-use crate::DTNCORE;
-use crate::{peers_add, routing_notify, CONFIG};
-use anyhow::Result;
-use log::{debug, error, info};
-use socket2::{Domain, Socket, Type};
-use std::collections::HashMap;
-use std::io;
-use std::net::SocketAddr;
-use tokio::net::UdpSocket;
-use tokio::time::interval;
+use crate::utils::{CONFIG, DTNCORE, peers_add, routing_notify};
 
 async fn receiver(socket: UdpSocket) -> Result<(), io::Error> {
     let mut buf: Vec<u8> = vec![0; 1024 * 64];
@@ -58,7 +59,7 @@ async fn receiver(socket: UdpSocket) -> Result<(), io::Error> {
 }
 
 async fn announcer(socket: UdpSocket, _v6: bool) {
-    let mut task = interval(crate::CONFIG.lock().announcement_interval);
+    let mut task = interval(CONFIG.lock().announcement_interval);
     loop {
         debug!("waiting announcer");
         task.tick().await;
@@ -66,10 +67,10 @@ async fn announcer(socket: UdpSocket, _v6: bool) {
 
         // Start to build beacon announcement
         let eid = (*CONFIG.lock()).host_eid.clone();
-        let beacon_period = if !crate::CONFIG.lock().enable_period {
+        let beacon_period = if !CONFIG.lock().enable_period {
             None
         } else {
-            Some(crate::CONFIG.lock().announcement_interval)
+            Some(CONFIG.lock().announcement_interval)
         };
         let mut pkt = Beacon::with_config(eid, ServiceBlock::new(), beacon_period);
         // Get all available clas
@@ -120,6 +121,7 @@ async fn announcer(socket: UdpSocket, _v6: bool) {
         }
     }
 }
+
 pub async fn spawn_neighbour_discovery() -> Result<()> {
     let v4 = (*CONFIG.lock()).v4;
     let v6 = (*CONFIG.lock()).v6;

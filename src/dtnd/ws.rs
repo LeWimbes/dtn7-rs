@@ -1,24 +1,25 @@
-use crate::core::application_agent::ApplicationAgent;
-use crate::CONFIG;
-use crate::DTNCORE;
-
-use anyhow::{bail, Result};
-use axum::extract::ws::{Message, WebSocket};
-use bp7::flags::BlockControlFlags;
-use bp7::flags::BundleControlFlags;
-use bp7::{Bundle, CreationTimestamp, EndpointID};
-use dtn7_plus::client::{WsRecvData, WsSendData};
-use futures::{sink::SinkExt, stream::StreamExt};
-use log::{debug, warn};
-use std::collections::HashSet;
-use std::sync::Arc;
 use std::{
     convert::TryFrom,
     time::{Duration, Instant},
 };
+use std::collections::HashSet;
+use std::sync::Arc;
+
+use anyhow::{bail, Result};
+use axum::extract::ws::{Message, WebSocket};
+use bp7::{Bundle, CreationTimestamp, EndpointID};
+use bp7::flags::BlockControlFlags;
+use bp7::flags::BundleControlFlags;
+use dtn7_plus::client::{WsRecvData, WsSendData};
+use futures::{sink::SinkExt, stream::StreamExt};
+use log::{debug, warn};
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
 use tokio::time::interval;
+
+use crate::core::application_agent::ApplicationAgent;
+use crate::utils::{CONFIG, DTNCORE};
+
 // Begin application agent WebSocket specific stuff
 
 /// How often new bundles are checked when no direct delivery happens (DEPRECATED)
@@ -131,7 +132,8 @@ pub async fn handle_socket(socket: WebSocket) {
         _ = (&mut recv_task) => {send_task.abort(); hb_task.abort();br_task.abort();},
         _ = (&mut hb_task) => {send_task.abort(); recv_task.abort(); br_task.abort();},
         _ = (&mut br_task) => {hb_task.abort(); recv_task.abort(); send_task.abort();},
-    };
+    }
+    ;
 
     if let Some(endpoints) = &session.lock().await.endpoints {
         for eid in endpoints {
@@ -288,7 +290,7 @@ impl WsAASession {
                                             ws_reply_text!(socket, "404 unknown endpoint");
                                         } else {
                                             if let Some(ep) =
-                                                (*DTNCORE.lock()).get_endpoint_mut(&eid)
+                                            (*DTNCORE.lock()).get_endpoint_mut(&eid)
                                             {
                                                 ep.set_delivery_addr(self.tx.clone());
                                             }
@@ -319,8 +321,7 @@ impl WsAASession {
                             ws_reply_text!(socket, format!("501 unknown command: {:?}", m));
                         }
                     }
-                } else {
-                }
+                } else {}
             }
 
             Message::Binary(bin) => {
