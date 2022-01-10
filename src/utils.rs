@@ -1,9 +1,11 @@
 use std::collections::HashMap;
+use std::convert::TryInto;
 
 use anyhow::Result;
-use bp7::{Bundle, EndpointID};
+use bp7::{Bundle, CreationTimestamp, EndpointID};
+use bp7::flags::BundleControlFlags;
 use lazy_static::*;
-use log::error;
+use log::{debug, error, info};
 use parking_lot::Mutex;
 use tokio::sync::mpsc::Sender;
 
@@ -146,4 +148,37 @@ pub fn store_delete_expired() {
 
 pub fn routing_notify(notification: RoutingNotifcation) {
     (*DTNCORE.lock()).routing_agent.notify(notification);
+}
+
+pub fn broadcast(bundle: &Bundle) {
+    info!("Broadcasting {:?} | {:?}", bundle.id(), bp7::dtn_time_now());
+    debug!("Received raw: {:?}", bundle);
+
+    for p in (*PEERS.lock()).values() {
+        let dst: EndpointID = p.eid.clone();
+        let dst: EndpointID = format!("{}/in", dst).as_str().try_into().unwrap();
+        let lifetime = std::time::Duration::from_secs(60 * 60);
+        let src = (*CONFIG.lock()).host_eid.clone();
+        let flags = BundleControlFlags::BUNDLE_MUST_NOT_FRAGMENTED
+            | BundleControlFlags::BUNDLE_STATUS_REQUEST_DELIVERY;
+        let pblock = bp7::primary::PrimaryBlockBuilder::default()
+            .bundle_control_flags(flags.bits())
+            .destination(dst.clone())
+            .source(src.clone())
+            .report_to(src)
+            .creation_timestamp(CreationTimestamp::now())
+            .lifetime(lifetime)
+            .build()
+            .unwrap();
+
+
+        let mut new_bndl = bp7::bundle::BundleBuilder::default()
+            .primary(pblock)
+            .canonicals(bundle.canonicals.to_vec())
+            .build()
+            .unwrap();
+        new_bndl.set_crc(bp7::crc::CRC_NO);
+
+        tokio::spawn(crate::core::processing::send_bundle(new_bndl));
+    }
 }

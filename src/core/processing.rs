@@ -16,7 +16,7 @@ use crate::cla;
 use crate::core::*;
 use crate::core::bundlepack::*;
 use crate::routing::RoutingNotifcation;
-use crate::utils::{CONFIG, DTNCORE, is_local_node_id, peer_find_by_remote, peers_cla_for_node, routing_notify, SENDERTASK, STATS, store_get_bundle, store_get_metadata, store_has_item, store_push_bundle, store_remove};
+use crate::utils::{broadcast, CONFIG, DTNCORE, is_local_node_id, peer_find_by_remote, peers_cla_for_node, routing_notify, SENDERTASK, STATS, store_get_bundle, store_get_metadata, store_has_item, store_push_bundle, store_remove};
 
 // transmit an outbound bundle.
 pub async fn send_bundle(bndl: Bundle) {
@@ -433,8 +433,7 @@ pub async fn local_delivery(mut bp: BundlePack) -> Result<()> {
     bp.add_constraint(Constraint::LocalEndpoint);
     bp.sync()?;
     if let Some(aa) = (*DTNCORE.lock()).get_endpoint_mut(&bp.destination) {
-        info!("Delivering {}", bp.id());
-        aa.push(&bndl);
+        broadcast(&bndl);
         (*STATS.lock()).delivered += 1;
     }
     if is_local_node_id(&bp.destination) {
