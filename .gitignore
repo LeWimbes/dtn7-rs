@@ -11,5 +11,6 @@
 
 .idea/
 .vscode/
+.embuild/
 
 .DS_Store

@@ -350,7 +350,7 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
 dependencies = [
- "generic-array",
+    "generic-array",
 ]
 
 [[package]]
@@ -360,17 +360,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
-name = "dtn7"
+name = "dtn7-plus"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10f28d8d35dba36825ef5b8816ce65d40a48356a9cfcae0659c52ba6c841da0c"
+dependencies = [
+    "anyhow",
+    "attohttpc",
+    "base64",
+    "bp7",
+    "serde",
+    "serde_bytes",
+    "serde_cbor",
+    "serde_json",
+    "thiserror",
+    "tungstenite",
+    "url",
+]
+
+[[package]]
+name = "dtn7esp"
 version = "0.17.1"
 dependencies = [
- "anyhow",
- "async-trait",
- "attohttpc",
- "axum",
- "bitflags",
- "bp7",
- "bytes",
- "clap",
+    "anyhow",
+    "async-trait",
+    "attohttpc",
+    "axum",
+    "bitflags",
+    "bp7",
+    "bytes",
+    "clap",
  "config",
  "d7sneakers",
  "derive_more",
@@ -400,25 +419,6 @@ dependencies = [
  "tinytemplate",
  "tokio",
  "tokio-util",
- "tungstenite",
- "url",
-]
-
-[[package]]
-name = "dtn7-plus"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10f28d8d35dba36825ef5b8816ce65d40a48356a9cfcae0659c52ba6c841da0c"
-dependencies = [
- "anyhow",
- "attohttpc",
- "base64",
- "bp7",
- "serde",
- "serde_bytes",
- "serde_cbor",
- "serde_json",
- "thiserror",
  "tungstenite",
  "url",
 ]
