@@ -1,3 +1,0 @@
-#!/bin/sh
-
-echo "received a bundle from $1 in $2" >> recv.log
