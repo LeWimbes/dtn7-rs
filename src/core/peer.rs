@@ -77,25 +77,6 @@ impl DtnPeer {
     /// Example
     ///
     /// ```
-    /// use std::{thread, time};
-    /// use dtn7::core::*;
-    /// use dtn7::CONFIG;
-    ///
-    /// let mut peer = helpers::rnd_peer();
-    /// let original_time = peer.last_contact;
-    /// thread::sleep(time::Duration::from_secs(1));
-    /// peer.touch();
-    /// assert!(original_time < peer.last_contact);
-    /// ```
-    pub fn touch(&mut self) {
-        self.last_contact = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-    }
-    /// Example
-    ///
-    /// ```
     /// use std::{thread, time::Duration};
     /// use dtn7::core::*;
     /// use dtn7::CONFIG;

@@ -26,9 +26,6 @@ pub const SERVICE_BLOCK_PRESENT: BeaconFlags = 0b0000_0010;
 /// Beacon Period field is present
 pub const BEACON_PERIOD_PRESENT: BeaconFlags = 0b0000_0100;
 
-/// Bits 4 - 7 are reserved for future specifications
-pub const RESERVED_BITS: BeaconFlags = 0b1111_1000;
-
 /// The struct representing the messages sent from a node to advertise itself in an unknown neighbourhood
 ///
 /// Based on RFC5050 with changes to the encoding. Old encoding was based on SDNV, new encoding uses CBOR
@@ -54,20 +51,6 @@ pub struct Beacon {
 }
 
 impl Beacon {
-    /// Method to create a default Beacon that doesn't advertise any services or future beacons
-    ///
-    /// Comes with an empty ServiceBlock and no beacon_period
-    pub fn new(eid: EndpointID) -> Beacon {
-        Beacon {
-            version: IPND_VERSION,
-            flags: SOURCE_EID_PRESENT,
-            eid,
-            beacon_sequence_number: 0,
-            service_block: ServiceBlock::new(),
-            beacon_period: None,
-        }
-    }
-
     /// Creates a new Beacon with pre-configured EID, ServiceBlock and BeaconPeriod
     pub fn with_config(
         eid: EndpointID,
@@ -93,24 +76,9 @@ impl Beacon {
         beacon
     }
 
-    /// Returns the currently used IPND version
-    pub fn version(&self) -> String {
-        format!("{:#x}", self.version)
-    }
-
-    /// Returns the current flag configuration
-    pub fn flags(&self) -> String {
-        format!("{:#010b}", self.flags)
-    }
-
     /// Returns the sender eid
     pub fn eid(&self) -> &EndpointID {
         &self.eid
-    }
-
-    /// Returns the amount of times this beacon was send to the same IP address
-    pub fn beacon_sequence_number(&self) -> u32 {
-        self.beacon_sequence_number
     }
 
     /// Returns the ServiceBlock

@@ -78,25 +78,6 @@ impl DtnCore {
             self.endpoints.push(aa);
         }
     }
-    pub fn unregister_application_agent(&mut self, aa: ApplicationAgentEnum) {
-        info!("Unregistered application agent for EID: {}", aa.eid());
-        self.endpoints
-            .iter()
-            .position(|n| n.eid() == aa.eid())
-            .map(|e| self.endpoints.remove(e));
-    }
-    pub fn eids(&self) -> Vec<String> {
-        self.endpoints.iter().map(|e| e.eid().to_string()).collect()
-    }
-    pub fn bundle_ids(&self) -> Vec<String> {
-        (*STORE.lock()).all_ids()
-    }
-    pub fn bundle_count(&self) -> usize {
-        (*STORE.lock()).count() as usize
-    }
-    pub fn bundle_names(&self) -> Vec<String> {
-        (*STORE.lock()).all_ids()
-    }
     pub fn is_in_endpoints(&self, eid: &EndpointID) -> bool {
         for aa in self.endpoints.iter() {
             if eid == aa.eid() {
@@ -107,14 +88,6 @@ impl DtnCore {
     }
     pub fn get_endpoint_mut(&mut self, eid: &EndpointID) -> Option<&mut ApplicationAgentEnum> {
         for aa in self.endpoints.iter_mut() {
-            if eid == aa.eid() {
-                return Some(aa);
-            }
-        }
-        None
-    }
-    pub fn get_endpoint(&self, eid: &EndpointID) -> Option<&ApplicationAgentEnum> {
-        for aa in self.endpoints.iter() {
             if eid == aa.eid() {
                 return Some(aa);
             }

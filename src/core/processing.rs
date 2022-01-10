@@ -10,13 +10,12 @@ use bp7::BUNDLE_AGE_BLOCK;
 use bp7::CanonicalData;
 use bp7::flags::*;
 use log::{debug, info, warn};
-use tokio::sync::mpsc::channel;
 
 use crate::cla;
 use crate::core::*;
 use crate::core::bundlepack::*;
 use crate::routing::RoutingNotifcation;
-use crate::utils::{broadcast, CONFIG, DTNCORE, is_local_node_id, peer_find_by_remote, peers_cla_for_node, routing_notify, SENDERTASK, STATS, store_get_bundle, store_get_metadata, store_has_item, store_push_bundle, store_remove};
+use crate::utils::{broadcast, CONFIG, DTNCORE, is_local_node_id, peer_find_by_remote, peers_cla_for_node, routing_notify, STATS, store_get_bundle, store_get_metadata, store_has_item, store_push_bundle, store_remove};
 
 // transmit an outbound bundle.
 pub async fn send_bundle(bndl: Bundle) {
@@ -29,40 +28,6 @@ pub async fn send_bundle(bndl: Bundle) {
             warn!("Transmission failed: {}", err);
         }
     });
-}
-
-pub fn send_through_task(bndl: Bundle) {
-    let mut stask = SENDERTASK.lock();
-    if stask.is_none() {
-        let (tx, rx) = channel(50);
-        tokio::spawn(sender_task(rx));
-        *stask = Some(tx);
-    }
-    let tx = stask.as_ref().unwrap().clone();
-    //let mut rt = tokio::runtime::Runtime::new().unwrap();
-    let rt = tokio::runtime::Handle::current();
-    rt.spawn(async move { tx.send(bndl).await });
-}
-
-pub async fn send_through_task_async(bndl: Bundle) {
-    let mut stask = SENDERTASK.lock();
-    if stask.is_none() {
-        let (tx, rx) = channel(50);
-        tokio::spawn(sender_task(rx));
-        *stask = Some(tx);
-    }
-    let tx = stask.as_ref().unwrap().clone();
-
-    if let Err(err) = tx.send(bndl).await {
-        warn!("Transmission failed: {}", err);
-    }
-}
-
-pub async fn sender_task(mut rx: tokio::sync::mpsc::Receiver<Bundle>) {
-    while let Some(bndl) = rx.recv().await {
-        debug!("sending bundle through task channel");
-        send_bundle(bndl).await;
-    }
 }
 
 // starts the transmission of an outbounding bundle pack. Therefore
@@ -432,7 +397,7 @@ pub async fn local_delivery(mut bp: BundlePack) -> Result<()> {
     }
     bp.add_constraint(Constraint::LocalEndpoint);
     bp.sync()?;
-    if let Some(aa) = (*DTNCORE.lock()).get_endpoint_mut(&bp.destination) {
+    if let Some(_aa) = (*DTNCORE.lock()).get_endpoint_mut(&bp.destination) {
         broadcast(&bndl);
         (*STATS.lock()).delivered += 1;
     }

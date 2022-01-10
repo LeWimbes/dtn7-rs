@@ -122,9 +122,6 @@ impl BundlePack {
         }
         Ok(())
     }
-    pub fn has_receiver(&self) -> bool {
-        self.destination != EndpointID::none()
-    }
     pub fn has_constraint(&self, constraint: Constraint) -> bool {
         self.constraints.contains(&constraint)
     }
@@ -145,12 +142,6 @@ impl BundlePack {
         if local_set {
             self.add_constraint(Constraint::LocalEndpoint);
         }
-    }
-    pub fn set_constraints(&mut self, constraints: HashSet<Constraint>) {
-        self.constraints = constraints;
-    }
-    pub fn to_cbor(&self) -> bp7::ByteBuffer {
-        serde_cbor::to_vec(self).expect("unexpected error converting BundlePack to cbor buffer")
     }
 }
 

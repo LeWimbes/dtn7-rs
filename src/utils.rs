@@ -7,7 +7,6 @@ use bp7::flags::BundleControlFlags;
 use lazy_static::*;
 use log::{debug, error, info};
 use parking_lot::Mutex;
-use tokio::sync::mpsc::Sender;
 
 use crate::cla::CLAEnum;
 pub use crate::core::{DtnCore, DtnPeer};
@@ -24,36 +23,11 @@ lazy_static! {
     pub static ref DTNCORE: Mutex<DtnCore> = Mutex::new(DtnCore::new());
     pub static ref PEERS: Mutex<HashMap<String, DtnPeer>> = Mutex::new(HashMap::new());
     pub static ref STATS: Mutex<DtnStatistics> = Mutex::new(DtnStatistics::new());
-    pub static ref SENDERTASK: Mutex<Option<Sender<Bundle>>> = Mutex::new(None);
     pub static ref STORE: Mutex<BundleStoresEnum> = Mutex::new(InMemoryBundleStore::new().into());
 }
 
 pub fn cla_add(cla: CLAEnum) {
     (*DTNCORE.lock()).cl_list.push(cla);
-}
-
-pub fn service_add(tag: u8, service: String) {
-    (*DTNCORE.lock()).service_list.insert(tag, service);
-}
-
-pub fn add_discovery_destination(destination: &str) {
-    (*CONFIG.lock())
-        .discovery_destinations
-        .insert(destination.to_string(), 0);
-}
-
-pub fn reset_sequence(destination: &str) {
-    if let Some(sequence) = (*CONFIG.lock()).discovery_destinations.get_mut(destination) {
-        *sequence = 0;
-    }
-}
-
-pub fn get_sequence(destination: &str) -> u32 {
-    if let Some(sequence) = (*CONFIG.lock()).discovery_destinations.get(destination) {
-        *sequence
-    } else {
-        0
-    }
 }
 
 /// adds a new peer to the DTN core
@@ -63,14 +37,6 @@ pub fn peers_add(peer: DtnPeer) -> bool {
     (*PEERS.lock())
         .insert(peer.eid.node().unwrap(), peer)
         .is_none()
-}
-
-pub fn peers_count() -> usize {
-    (*PEERS.lock()).len()
-}
-
-pub fn peers_clear() {
-    (*PEERS.lock()).clear();
 }
 
 pub fn peers_get_for_node(eid: &EndpointID) -> Option<DtnPeer> {
@@ -126,23 +92,6 @@ pub fn store_get_bundle(bpid: &str) -> Option<Bundle> {
 
 pub fn store_get_metadata(bpid: &str) -> Option<BundlePack> {
     (*STORE.lock()).get_metadata(bpid)
-}
-
-pub fn store_delete_expired() {
-    let pending_bids: Vec<String> = (*STORE.lock()).pending();
-
-    let expired: Vec<String> = pending_bids
-        .iter()
-        .map(|b| (*STORE.lock()).get_bundle(b))
-        //.filter(|b| b.is_some())
-        //.map(|b| b.unwrap())
-        .flatten()
-        .filter(|e| e.primary.is_lifetime_exceeded())
-        .map(|e| e.id())
-        .collect();
-    for bid in expired {
-        store_remove(&bid);
-    }
 }
 
 pub fn routing_notify(notification: RoutingNotifcation) {

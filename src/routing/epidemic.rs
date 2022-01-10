@@ -26,17 +26,6 @@ impl EpidemicRoutingAgent {
         let entries = self.history.entry(bundle_id).or_insert_with(HashSet::new);
         entries.insert(node_name);
     }
-    /*fn remove_bundle(&mut self, bundle_id: String) {
-        self.history.remove(&bundle_id);
-    }*/
-    /*fn filtered(&mut self, dest: String, bundles: &[ByteBuffer]) -> Vec<ByteBuffer> {
-        let entries = self.history.entry(dest).or_insert_with(HashSet::new);
-        bundles
-            .iter()
-            .cloned()
-            .filter(|b| !entries.contains(b))
-            .collect()
-    }*/
     fn contains(&mut self, bundle_id: &str, node_name: &str) -> bool {
         if let Some(entries) = self.history.get(bundle_id) {
             //let entries = self.history.entry(bundle_id);
@@ -78,9 +67,6 @@ impl RoutingAgent for EpidemicRoutingAgent {
                         self.incoming_bundle(&bndl.id(), &node_name);
                     }
                 };
-            }
-            RoutingNotifcation::IncomingBundleWithoutPreviousNode(bid, node_name) => {
-                self.incoming_bundle(bid, node_name);
             }
             _ => {}
         }

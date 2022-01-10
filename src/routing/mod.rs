@@ -20,7 +20,6 @@ pub mod sink;
 pub enum RoutingNotifcation<'a> {
     SendingFailed(&'a str, &'a str),
     IncomingBundle(&'a Bundle),
-    IncomingBundleWithoutPreviousNode(&'a str, &'a str),
     EncounteredPeer(&'a EndpointID),
 }
 
@@ -32,24 +31,12 @@ pub enum RoutingAgentsEnum {
     SinkRoutingAgent,
 }
 
-/*
-impl std::fmt::Display for RoutingAgentsEnum {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-*/
-
 #[enum_dispatch(RoutingAgentsEnum)]
 pub trait RoutingAgent: Debug + Display {
     fn notify(&mut self, _notification: RoutingNotifcation) {}
     fn sender_for_bundle(&mut self, _bp: &BundlePack) -> (Vec<ClaSender>, bool) {
         unimplemented!();
     }
-}
-
-pub fn routing_algorithms() -> Vec<&'static str> {
-    vec!["epidemic", "flooding", "sink"]
 }
 
 pub fn new(routingagent: &str) -> RoutingAgentsEnum {
