@@ -11,7 +11,6 @@ use log::{debug, error, info};
 use crate::cla::CLAEnum;
 pub use crate::core::{DtnCore, DtnPeer};
 use crate::core::bundlepack::BundlePack;
-use crate::core::DtnStatistics;
 use crate::core::mem_store::{BundleStore, BundleStoresEnum, InMemoryBundleStore};
 use crate::core::peer::PeerAddress;
 use crate::dtnconfig::DtnConfig;
@@ -22,7 +21,6 @@ lazy_static! {
     pub static ref CONFIG: Mutex<DtnConfig> = Mutex::new(DtnConfig::new());
     pub static ref DTNCORE: Mutex<DtnCore> = Mutex::new(DtnCore::new());
     pub static ref PEERS: Mutex<HashMap<String, DtnPeer>> = Mutex::new(HashMap::new());
-    pub static ref STATS: Mutex<DtnStatistics> = Mutex::new(DtnStatistics::new());
     pub static ref STORE: Mutex<BundleStoresEnum> = Mutex::new(InMemoryBundleStore::new().into());
 }
 

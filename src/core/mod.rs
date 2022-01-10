@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use bp7::EndpointID;
 use log::{error, info};
-use serde::{Deserialize, Serialize};
 
 use application_agent::ApplicationAgent;
 
@@ -22,27 +21,6 @@ pub mod bundlepack;
 pub mod peer;
 pub mod processing;
 pub mod mem_store;
-
-#[derive(Debug, Serialize, Deserialize, Default, Clone)]
-pub struct DtnStatistics {
-    pub incoming: u64,
-    pub dups: u64,
-    pub outgoing: u64,
-    pub delivered: u64,
-    pub broken: u64,
-}
-
-impl DtnStatistics {
-    pub fn new() -> DtnStatistics {
-        DtnStatistics {
-            incoming: 0,
-            dups: 0,
-            outgoing: 0,
-            delivered: 0,
-            broken: 0,
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct DtnCore {
