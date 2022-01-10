@@ -1,12 +1,14 @@
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::io;
 use std::net::SocketAddr;
 
 use anyhow::Result;
+use futures_util::StreamExt;
 use log::{debug, error, info};
+use smol::net::UdpSocket;
+use smol::Timer;
 use socket2::{Domain, Socket, Type};
-use tokio::net::UdpSocket;
-use tokio::time::interval;
 
 use crate::cla::ConvergenceLayerAgent;
 use crate::core::{DtnPeer, PeerType};
@@ -59,10 +61,10 @@ async fn receiver(socket: UdpSocket) -> Result<(), io::Error> {
 }
 
 async fn announcer(socket: UdpSocket, _v6: bool) {
-    let mut task = interval(CONFIG.lock().unwrap().announcement_interval);
+    let mut task = Timer::interval(CONFIG.lock().unwrap().announcement_interval);
     loop {
         debug!("waiting announcer");
-        task.tick().await;
+        task.next().await;
         debug!("running announcer");
 
         // Start to build beacon announcement
@@ -132,11 +134,10 @@ pub async fn spawn_neighbour_discovery() -> Result<()> {
         let socket = Socket::new(Domain::IPV4, Type::DGRAM, None)?;
         socket.set_reuse_address(true)?;
         socket.bind(&addr)?;
-
-        // DEBUG: setup multicast on loopback to true
         socket
             .set_multicast_loop_v4(false)
             .expect("error activating multicast loop v4");
+
         for address in (*CONFIG.lock().unwrap()).discovery_destinations.keys() {
             let addr: SocketAddr = address.parse().expect("Error parsing discovery address");
             if addr.is_ipv4() && addr.ip().is_multicast() {
@@ -148,19 +149,15 @@ pub async fn spawn_neighbour_discovery() -> Result<()> {
                     .expect("error joining multicast v4 group");
             }
         }
-        /*
-        socket
-            .join_multicast_v4(&"224.0.0.26".parse()?, &std::net::Ipv4Addr::new(0, 0, 0, 0))
-            .expect("error joining multicast v4 group");
-        */
 
-        let socket1 = UdpSocket::from_std(socket.try_clone()?.into())?;
-        let socket2 = UdpSocket::from_std(socket.try_clone()?.into())?;
+        let tmp1: std::net::UdpSocket = socket.try_clone()?.into();
+        let tmp2: std::net::UdpSocket = socket.try_clone()?.into();
+        let socket1 = UdpSocket::try_from(tmp1)?;
+        let socket2 = UdpSocket::try_from(tmp2)?;
 
         info!("Listening on {}", socket1.local_addr()?);
 
         tokio::spawn(receiver(socket1));
-
         tokio::spawn(announcer(socket2, false));
     }
     if v6 {
@@ -170,7 +167,6 @@ pub async fn spawn_neighbour_discovery() -> Result<()> {
         socket.set_reuse_address(true)?;
         socket.set_only_v6(true)?;
         socket.bind(&addr)?;
-        // DEBUG: setup multicast on loopback to true
         socket
             .set_multicast_loop_v6(false)
             .expect("error activating multicast loop v6");
@@ -183,13 +179,11 @@ pub async fn spawn_neighbour_discovery() -> Result<()> {
                     .expect("Error joining multicast v6 group");
             }
         }
-        /*
-        socket
-            .join_multicast_v6(&"FF02::300".parse()?, 0)
-            .expect("error joining multicast v6 group");
-        */
-        let socket1 = UdpSocket::from_std(socket.try_clone()?.into())?;
-        let socket2 = UdpSocket::from_std(socket.try_clone()?.into())?;
+
+        let tmp1: std::net::UdpSocket = socket.try_clone()?.into();
+        let tmp2: std::net::UdpSocket = socket.try_clone()?.into();
+        let socket1 = UdpSocket::try_from(tmp1)?;
+        let socket2 = UdpSocket::try_from(tmp2)?;
 
         info!("Listening on {}", socket1.local_addr()?);
 
