@@ -73,7 +73,7 @@ impl RoutingAgent for EpidemicRoutingAgent {
     }
     fn sender_for_bundle(&mut self, bp: &BundlePack) -> (Vec<ClaSender>, bool) {
         let mut clas = Vec::new();
-        for (_, p) in (*PEERS.lock()).iter() {
+        for (_, p) in (*PEERS.lock().unwrap()).iter() {
             if let Some(cla) = p.first_cla() {
                 if !self.contains(bp.id(), &p.node_name()) {
                     clas.push(cla);

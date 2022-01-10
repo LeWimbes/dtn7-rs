@@ -24,7 +24,7 @@ impl std::fmt::Display for FloodingRoutingAgent {
 impl RoutingAgent for FloodingRoutingAgent {
     fn sender_for_bundle(&mut self, _bp: &BundlePack) -> (Vec<ClaSender>, bool) {
         let mut clas = Vec::new();
-        for (_, p) in (*PEERS.lock()).iter() {
+        for (_, p) in (*PEERS.lock().unwrap()).iter() {
             if let Some(cla) = p.first_cla() {
                 clas.push(cla);
             }

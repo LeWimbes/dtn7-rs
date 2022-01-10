@@ -16,7 +16,7 @@ pub struct HttpConvergenceLayer {
 impl HttpConvergenceLayer {
     pub fn new(port: Option<u16>) -> HttpConvergenceLayer {
         HttpConvergenceLayer {
-            local_port: port.unwrap_or((*CONFIG.lock()).webport),
+            local_port: port.unwrap_or((*CONFIG.lock().unwrap()).webport),
         }
     }
 }

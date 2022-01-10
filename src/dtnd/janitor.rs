@@ -14,7 +14,7 @@ async fn janitor() {
 
 pub fn spawn_janitor() {
     tokio::spawn(crate::dtnd::cron::spawn_timer(
-        (*CONFIG.lock()).janitor_interval,
+        (*CONFIG.lock().unwrap()).janitor_interval,
         janitor,
     ));
 }

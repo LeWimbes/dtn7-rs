@@ -98,7 +98,7 @@ impl DtnCore {
 
 /// Removes peers from global peer list that haven't been seen in a while.
 pub fn process_peers() {
-    (*PEERS.lock()).retain(|_k, v| {
+    (*PEERS.lock().unwrap()).retain(|_k, v| {
         let val = v.still_valid();
         if !val {
             info!(
@@ -112,7 +112,7 @@ pub fn process_peers() {
 
 /// Reprocess bundles in store
 pub async fn process_bundles() {
-    let forwarding_bids: Vec<String> = (*STORE.lock()).forwarding();
+    let forwarding_bids: Vec<String> = (*STORE.lock().unwrap()).forwarding();
 
     let mut forwarding_bundles: Vec<BundlePack> = forwarding_bids
         .iter()

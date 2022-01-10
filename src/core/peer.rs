@@ -81,7 +81,7 @@ impl DtnPeer {
     /// use dtn7::core::*;
     /// use dtn7::CONFIG;
     ///
-    /// (*CONFIG.lock()).peer_timeout = Duration::from_secs(1);
+    /// (*CONFIG.lock().unwrap()).peer_timeout = Duration::from_secs(1);
     /// let mut peer = helpers::rnd_peer();
     /// peer.con_type = PeerType::Dynamic;
     /// assert_eq!(peer.still_valid(), true);
@@ -97,8 +97,8 @@ impl DtnPeer {
         // If a custom peer timeout was specified force remove all peers after specified amount of time
         // Or if no custom peer timeout was specified force remove all peers after default peer timeout
         // that didn't advertise a BeaconPeriod
-        let timeout = (*CONFIG.lock()).peer_timeout.as_secs();
-        let custom = (*CONFIG.lock()).custom_timeout;
+        let timeout = (*CONFIG.lock().unwrap()).peer_timeout.as_secs();
+        let custom = (*CONFIG.lock().unwrap()).custom_timeout;
         if (custom && timeout > 0) || self.period.is_none() {
             let now = SystemTime::now()
                 .duration_since(UNIX_EPOCH)

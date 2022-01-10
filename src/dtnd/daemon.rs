@@ -54,7 +54,7 @@ fn spawn_core_daemon(rx: Receiver<DtnCmd>) {
 async fn start_convergencylayers() {
     info!("Starting convergency layers");
 
-    for cl in &mut (*DTNCORE.lock()).cl_list {
+    for cl in &mut (*DTNCORE.lock().unwrap()).cl_list {
         info!("Setup {}", cl);
         cl.setup().await;
     }
@@ -62,47 +62,47 @@ async fn start_convergencylayers() {
 
 pub async fn start_dtnd(cfg: DtnConfig) -> anyhow::Result<()> {
     {
-        (*CONFIG.lock()).set(cfg);
+        (*CONFIG.lock().unwrap()).set(cfg);
     }
-    info!("Local Node ID: {}", (*CONFIG.lock()).host_eid);
+    info!("Local Node ID: {}", (*CONFIG.lock().unwrap()).host_eid);
 
-    info!("Work Dir: {:?}", (*CONFIG.lock()).workdir);
+    info!("Work Dir: {:?}", (*CONFIG.lock().unwrap()).workdir);
 
-    (*STORE.lock()) = crate::core::mem_store::InMemoryBundleStore::new().into();
+    (*STORE.lock().unwrap()) = crate::core::mem_store::InMemoryBundleStore::new().into();
 
     info!(
         "Announcement Interval: {}",
-        humantime::format_duration((*CONFIG.lock()).announcement_interval)
+        humantime::format_duration((*CONFIG.lock().unwrap()).announcement_interval)
     );
 
     info!(
         "Janitor Interval: {}",
-        humantime::format_duration((*CONFIG.lock()).janitor_interval)
+        humantime::format_duration((*CONFIG.lock().unwrap()).janitor_interval)
     );
 
     info!(
         "Peer Timeout: {}",
-        humantime::format_duration((*CONFIG.lock()).peer_timeout)
+        humantime::format_duration((*CONFIG.lock().unwrap()).peer_timeout)
     );
 
-    info!("Web Port: {}", (*CONFIG.lock()).webport);
-    info!("IPv4: {}", (*CONFIG.lock()).v4);
-    info!("IPv6: {}", (*CONFIG.lock()).v6);
+    info!("Web Port: {}", (*CONFIG.lock().unwrap()).webport);
+    info!("IPv4: {}", (*CONFIG.lock().unwrap()).v4);
+    info!("IPv6: {}", (*CONFIG.lock().unwrap()).v6);
 
     info!(
         "Generate Status Reports: {}",
-        (*CONFIG.lock()).generate_status_reports
+        (*CONFIG.lock().unwrap()).generate_status_reports
     );
 
-    let routing = (*CONFIG.lock()).routing.clone();
-    (*DTNCORE.lock()).routing_agent = crate::routing::new(&routing);
+    let routing = (*CONFIG.lock().unwrap()).routing.clone();
+    (*DTNCORE.lock().unwrap()).routing_agent = crate::routing::new(&routing);
 
-    info!("RoutingAgent: {}", (*DTNCORE.lock()).routing_agent);
+    info!("RoutingAgent: {}", (*DTNCORE.lock().unwrap()).routing_agent);
 
     info!("Adding CLA: \"http\"");
     cla_add(crate::cla::http::HttpConvergenceLayer::new(None).into());
 
-    for s in &(*CONFIG.lock()).statics {
+    for s in &(*CONFIG.lock().unwrap()).statics {
         let port_str = if s.cla_list[0].1.is_some() {
             format!(":{}", s.cla_list[0].1.unwrap())
         } else {
@@ -118,10 +118,10 @@ pub async fn start_dtnd(cfg: DtnConfig) -> anyhow::Result<()> {
         peers_add(s.clone());
     }
 
-    let local_host_id = (*CONFIG.lock()).host_eid.clone();
-    (*DTNCORE.lock())
+    let local_host_id = (*CONFIG.lock().unwrap()).host_eid.clone();
+    (*DTNCORE.lock().unwrap())
         .register_application_agent(SimpleApplicationAgent::with(local_host_id.clone()).into());
-    for e in &(*CONFIG.lock()).endpoints {
+    for e in &(*CONFIG.lock().unwrap()).endpoints {
         let eid = if let Ok(eid) = EndpointID::try_from(e.clone()) {
             // TODO: add check if non-local ID that service name is non-singleton ('~') for naming scheme dtn
             eid
@@ -131,13 +131,13 @@ pub async fn start_dtnd(cfg: DtnConfig) -> anyhow::Result<()> {
                 .expect("Error constructing new endpoint")
         };
 
-        (*DTNCORE.lock()).register_application_agent(SimpleApplicationAgent::with(eid).into());
+        (*DTNCORE.lock().unwrap()).register_application_agent(SimpleApplicationAgent::with(eid).into());
     }
     start_convergencylayers().await;
-    if CONFIG.lock().janitor_interval.as_micros() != 0 {
+    if CONFIG.lock().unwrap().janitor_interval.as_micros() != 0 {
         janitor::spawn_janitor();
     }
-    if CONFIG.lock().announcement_interval.as_micros() != 0 {
+    if CONFIG.lock().unwrap().announcement_interval.as_micros() != 0 {
         if let Err(errmsg) = neighbour_discovery::spawn_neighbour_discovery().await {
             error!("Error spawning service discovery: {:?}", errmsg);
         }

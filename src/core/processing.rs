@@ -39,7 +39,7 @@ pub async fn transmit(mut bp: BundlePack) -> Result<()> {
     bp.sync()?;
 
     let src = &bp.source;
-    if src != &bp7::EndpointID::none() && (*DTNCORE.lock()).get_endpoint_mut(src).is_none() {
+    if src != &bp7::EndpointID::none() && (*DTNCORE.lock().unwrap()).get_endpoint_mut(src).is_none() {
         info!(
             "Bundle's source is neither dtn:none nor an endpoint of this node: {} {}",
             bp.id(),
@@ -80,7 +80,7 @@ pub async fn receive(mut bndl: Bundle) -> Result<()> {
         .bundle_control_flags
         .contains(BundleControlFlags::BUNDLE_STATUS_REQUEST_RECEPTION)
         && !bndl.is_administrative_record()
-        && (*CONFIG.lock()).generate_status_reports
+        && (*CONFIG.lock().unwrap()).generate_status_reports
     {
         send_status_report(&bp, RECEIVED_BUNDLE, NO_INFORMATION).await;
     }
@@ -103,7 +103,7 @@ pub async fn receive(mut bndl: Bundle) -> Result<()> {
                 bp.id(),
                 cb.block_type
             );
-            if (*CONFIG.lock()).generate_status_reports {
+            if (*CONFIG.lock().unwrap()).generate_status_reports {
                 send_status_report(&bp, RECEIVED_BUNDLE, BLOCK_UNINTELLIGIBLE).await;
             } else {
                 info!("Generation of status reports disabled, ignoring request");
@@ -150,7 +150,7 @@ pub async fn dispatch(bp: BundlePack) -> Result<()> {
         &store_get_bundle(bp.id()).unwrap(),
     ));
 
-    if (*DTNCORE.lock()).is_in_endpoints(&bp.destination)
+    if (*DTNCORE.lock().unwrap()).is_in_endpoints(&bp.destination)
     // TODO: lookup here AND in local delivery, optmize for just one
     {
         local_delivery(bp.clone()).await?;
@@ -239,7 +239,7 @@ async fn handle_previous_node_block(mut bundle: Bundle) -> Result<Bundle> {
             .previous_node_get()
             .expect("no previoud node EID found!")
             .clone();
-        let local_eid = (*CONFIG.lock()).host_eid.clone();
+        let local_eid = (*CONFIG.lock().unwrap()).host_eid.clone();
         pnb.previous_node_update(local_eid.clone());
         debug!(
             "Previous Node Block was updated: {} {} {}",
@@ -249,7 +249,7 @@ async fn handle_previous_node_block(mut bundle: Bundle) -> Result<Bundle> {
         );
     } else {
         // according to rfc always add a previous node block
-        let local_eid = (*CONFIG.lock()).host_eid.clone();
+        let local_eid = (*CONFIG.lock().unwrap()).host_eid.clone();
         let pnb = bp7::canonical::new_previous_node_block(0, BlockControlFlags::empty(), local_eid);
         bundle.add_canonical_block(pnb);
     }
@@ -285,7 +285,7 @@ pub async fn forward(mut bp: BundlePack) -> Result<()> {
         debug!("Attempting direct delivery: {:?}", direct_node);
         nodes.push(direct_node);
     } else {
-        let (cla_nodes, del) = (*DTNCORE.lock()).routing_agent.sender_for_bundle(&bp);
+        let (cla_nodes, del) = (*DTNCORE.lock().unwrap()).routing_agent.sender_for_bundle(&bp);
         nodes = cla_nodes;
         delete_afterwards = del;
         if !nodes.is_empty() {
@@ -328,12 +328,12 @@ pub async fn forward(mut bp: BundlePack) -> Result<()> {
                     );
                     bundle_sent.store(true, Ordering::Relaxed);
                 } else if let Some(node_name) = peer_find_by_remote(&n.remote) {
-                    (*DTNCORE.lock())
+                    (*DTNCORE.lock().unwrap())
                         .routing_agent
                         .notify(RoutingNotifcation::SendingFailed(&bpid, &node_name));
                     info!("Sending bundle failed: {} {} {}", &bpid, n.remote, n.agent);
                     // TODO: send status report?
-                    // if (*CONFIG.lock()).generate_service_reports {
+                    // if (*CONFIG.lock().unwrap()).generate_service_reports {
                     //    send_status_report(&bp2, FORWARDED_BUNDLE, TRANSMISSION_CANCELED);
                     // }
                 }
@@ -363,7 +363,7 @@ pub async fn forward(mut bp: BundlePack) -> Result<()> {
                 .bundle_control_flags
                 .contains(BundleControlFlags::BUNDLE_STATUS_REQUEST_FORWARD)
                 && !bndl.is_administrative_record()
-                && (*CONFIG.lock()).generate_status_reports
+                && (*CONFIG.lock().unwrap()).generate_status_reports
             {
                 send_status_report(&bp, FORWARDED_BUNDLE, NO_INFORMATION).await;
             }
@@ -397,9 +397,9 @@ pub async fn local_delivery(mut bp: BundlePack) -> Result<()> {
     }
     bp.add_constraint(Constraint::LocalEndpoint);
     bp.sync()?;
-    if let Some(_aa) = (*DTNCORE.lock()).get_endpoint_mut(&bp.destination) {
+    if let Some(_aa) = (*DTNCORE.lock().unwrap()).get_endpoint_mut(&bp.destination) {
         broadcast(&bndl);
-        (*STATS.lock()).delivered += 1;
+        (*STATS.lock().unwrap()).delivered += 1;
     }
     if is_local_node_id(&bp.destination) {
         if bndl
@@ -407,7 +407,7 @@ pub async fn local_delivery(mut bp: BundlePack) -> Result<()> {
             .bundle_control_flags
             .contains(BundleControlFlags::BUNDLE_STATUS_REQUEST_DELIVERY)
             && !bndl.is_administrative_record()
-            && (*CONFIG.lock()).generate_status_reports
+            && (*CONFIG.lock().unwrap()).generate_status_reports
         {
             send_status_report(&bp, DELIVERED_BUNDLE, NO_INFORMATION).await;
         }
@@ -442,7 +442,7 @@ pub async fn delete(mut bp: BundlePack, reason: StatusReportReason) -> Result<()
         .bundle_control_flags
         .contains(BundleControlFlags::BUNDLE_STATUS_REQUEST_DELETION)
         && !bndl.is_administrative_record()
-        && (*CONFIG.lock()).generate_status_reports
+        && (*CONFIG.lock().unwrap()).generate_status_reports
     {
         send_status_report(&bp, DELETED_BUNDLE, reason).await;
     }
@@ -575,7 +575,7 @@ async fn send_status_report(
     }
 
     // Don't respond to ourself
-    if (*DTNCORE.lock()).is_in_endpoints(&bndl.primary.report_to) {
+    if (*DTNCORE.lock().unwrap()).is_in_endpoints(&bndl.primary.report_to) {
         return;
     }
 
@@ -588,7 +588,7 @@ async fn send_status_report(
 
     let out_bndl = new_status_report_bundle(
         &bndl,
-        (*CONFIG.lock()).host_eid.clone(),
+        (*CONFIG.lock().unwrap()).host_eid.clone(),
         bndl.primary.crc.to_code(),
         status,
         reason,

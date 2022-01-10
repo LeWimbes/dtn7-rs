@@ -23,7 +23,7 @@ impl<B> extract::FromRequest<B> for RequireLocalhost
     type Rejection = StatusCode;
 
     async fn from_request(conn: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        if (*CONFIG.lock()).unsafe_httpd {
+        if (*CONFIG.lock().unwrap()).unsafe_httpd {
             return Ok(Self);
         }
         if let Some(ext) = conn.extensions() {
@@ -75,10 +75,10 @@ pub async fn spawn_httpd() -> Result<()> {
         .route("/push", post(push_post));
 
 
-    let port = (*CONFIG.lock()).webport;
+    let port = (*CONFIG.lock().unwrap()).webport;
 
-    let v4 = (*CONFIG.lock()).v4;
-    let v6 = (*CONFIG.lock()).v6;
+    let v4 = (*CONFIG.lock().unwrap()).v4;
+    let v6 = (*CONFIG.lock().unwrap()).v6;
     //debug!("starting webserver");
     let server = if v4 && !v6 {
         hyper::Server::bind(&format!("0.0.0.0:{}", port).parse()?)
