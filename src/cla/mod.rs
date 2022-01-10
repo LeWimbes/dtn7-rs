@@ -5,18 +5,11 @@ use bp7::ByteBuffer;
 use derive_more::*;
 use enum_dispatch::enum_dispatch;
 
-use dummy::DummyConvergenceLayer;
-use mtcp::MtcpConvergenceLayer;
-use tcp::TcpConvergenceLayer;
-
-use crate::{core::peer::PeerAddress, dtnconfig::ClaConfig};
+use crate::core::peer::PeerAddress;
 
 use self::http::HttpConvergenceLayer;
 
-pub mod dummy;
 pub mod http;
-pub mod mtcp;
-pub mod tcp;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct ClaSender {
@@ -27,11 +20,7 @@ pub struct ClaSender {
 
 impl ClaSender {
     pub async fn transfer(&self, ready: &[ByteBuffer]) -> bool {
-        let sender = new(&ClaConfig {
-            id: self.agent.clone(),
-            port: None,
-            refuse_existing_bundles: false,
-        }); // since we are not listening sender port is irrelevant
+        let sender: CLAEnum = http::HttpConvergenceLayer::new(None).into(); // since we are not listening sender port is irrelevant
         let dest = if self.port.is_some() {
             format!("{}:{}", self.remote, self.port.unwrap())
         } else {
@@ -44,10 +33,7 @@ impl ClaSender {
 #[enum_dispatch]
 #[derive(Debug, Display)]
 pub enum CLAEnum {
-    DummyConvergenceLayer,
-    MtcpConvergenceLayer,
     HttpConvergenceLayer,
-    TcpConvergenceLayer,
 }
 
 /*
@@ -68,22 +54,5 @@ pub trait ConvergenceLayerAgent: Debug + Display {
 }
 
 pub fn convergence_layer_agents() -> Vec<&'static str> {
-    vec!["dummy", "mtcp", "http", "tcp"]
-}
-
-// returns a new CLA for the corresponding string ("<CLA name>[:local_port]").
-// Example usage: 'dummy', 'mtcp', 'mtcp:16161'
-pub fn new(cla: &ClaConfig) -> CLAEnum {
-    let ClaConfig {
-        id,
-        port,
-        refuse_existing_bundles,
-    } = cla;
-    match id.as_str() {
-        "dummy" => dummy::DummyConvergenceLayer::new().into(),
-        "mtcp" => mtcp::MtcpConvergenceLayer::new(*port).into(),
-        "http" => http::HttpConvergenceLayer::new(*port).into(),
-        "tcp" => tcp::TcpConvergenceLayer::new(*port, *refuse_existing_bundles).into(),
-        _ => panic!("Unknown convergence layer agent agent {}", id),
-    }
+    vec!["http"]
 }

@@ -27,20 +27,12 @@ pub struct DtnConfig {
     pub discovery_destinations: HashMap<String, u32>,
     pub janitor_interval: Duration,
     pub endpoints: Vec<String>,
-    pub clas: Vec<ClaConfig>,
     pub services: HashMap<u8, String>,
     pub routing: String,
     pub peer_timeout: Duration,
     pub statics: Vec<DtnPeer>,
     pub workdir: PathBuf,
     pub generate_status_reports: bool,
-}
-
-#[derive(Debug, Default, Clone, Serialize)]
-pub struct ClaConfig {
-    pub id: String,
-    pub port: Option<u16>,
-    pub refuse_existing_bundles: bool,
 }
 
 pub fn rnd_node_name() -> String {
@@ -141,33 +133,6 @@ impl From<PathBuf> for DtnConfig {
                 dtncfg.endpoints.push(eid);
             }
         }
-        if let Ok(clas) = s.get_table("convergencylayers.cla") {
-            for (_k, v) in clas.iter() {
-                let tab = v.clone().into_table().unwrap();
-                let cla_id = tab["id"].clone().into_str().unwrap();
-                let cla_port = if tab.contains_key("port") {
-                    tab["port"].clone().into_int().ok().map(|v| v as u16)
-                } else {
-                    None
-                };
-                let cla_refuse_existing_bundles = if tab.contains_key("refuse-existing-bundles") {
-                    tab["refuse-existing-bundles"]
-                        .clone()
-                        .into_bool()
-                        .unwrap_or(false)
-                } else {
-                    false
-                };
-                if crate::cla::convergence_layer_agents().contains(&cla_id.as_str()) {
-                    debug!("CLA: {:?}", cla_id);
-                    dtncfg.clas.push(ClaConfig {
-                        id: cla_id,
-                        port: cla_port,
-                        refuse_existing_bundles: cla_refuse_existing_bundles,
-                    });
-                }
-            }
-        }
         if let Ok(services) = s.get_table("services.service") {
             for (_k, v) in services.iter() {
                 let tab = v.clone().into_table().unwrap();
@@ -225,7 +190,6 @@ impl DtnConfig {
             webport: 3000,
             janitor_interval: "10s".parse::<humantime::Duration>().unwrap().into(),
             endpoints: Vec::new(),
-            clas: Vec::new(),
             services: HashMap::new(),
             routing: "epidemic".into(),
             peer_timeout: "20s".parse::<humantime::Duration>().unwrap().into(),
@@ -248,7 +212,6 @@ impl DtnConfig {
         self.discovery_destinations = cfg.discovery_destinations;
         self.janitor_interval = cfg.janitor_interval;
         self.endpoints = cfg.endpoints;
-        self.clas = cfg.clas;
         self.services = cfg.services;
         self.routing = cfg.routing;
         self.peer_timeout = cfg.peer_timeout;

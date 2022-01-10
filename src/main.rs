@@ -5,7 +5,7 @@ use std::convert::TryInto;
 
 use log::info;
 
-use crate::dtnconfig::{ClaConfig, DtnConfig};
+use crate::dtnconfig::DtnConfig;
 use crate::dtnd::daemon::start_dtnd;
 
 mod utils;
@@ -37,11 +37,6 @@ async fn main() -> Result<(), std::io::Error> {
     cfg.host_eid = "dtn://n1".try_into().unwrap();
     cfg.endpoints.push("in".to_string());
     cfg.routing = "epidemic".into();
-    cfg.clas.push(ClaConfig {
-        id: "http".into(),
-        port: None,
-        refuse_existing_bundles: true,
-    });
 
     cfg.v6 = false;
     cfg.v4 = true;

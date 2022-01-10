@@ -99,11 +99,8 @@ pub async fn start_dtnd(cfg: DtnConfig) -> anyhow::Result<()> {
 
     info!("RoutingAgent: {}", (*DTNCORE.lock()).routing_agent);
 
-    let clas = (*CONFIG.lock()).clas.clone();
-    for cla in &clas {
-        info!("Adding CLA: {:?}", cla);
-        cla_add(crate::cla::new(cla));
-    }
+    info!("Adding CLA: \"http\"");
+    cla_add(crate::cla::http::HttpConvergenceLayer::new(None).into());
 
     for s in &(*CONFIG.lock()).statics {
         let port_str = if s.cla_list[0].1.is_some() {
