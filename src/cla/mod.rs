@@ -26,6 +26,7 @@ impl ClaSender {
         } else {
             self.remote.to_string()
         };
+        #[cfg(feature = "native")]
         sender.scheduled_submission(&dest, ready).await
     }
 }
@@ -50,6 +51,7 @@ pub trait ConvergenceLayerAgent: Debug + Display {
     async fn setup(&mut self);
     fn port(&self) -> u16;
     fn name(&self) -> &'static str;
+    #[cfg(feature = "native")]
     async fn scheduled_submission(&self, dest: &str, ready: &[ByteBuffer]) -> bool;
 }
 

@@ -140,6 +140,7 @@ pub async fn start_dtnd(cfg: DtnConfig) -> anyhow::Result<()> {
             error!("Error spawning service discovery: {:?}", errmsg);
         }
     }
-    httpd::spawn_httpd().await?;
+    httpd::spawn_httpd()?;
+    println!("Done!");
     Ok(())
 }

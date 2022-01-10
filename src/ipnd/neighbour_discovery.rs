@@ -157,8 +157,8 @@ pub async fn spawn_neighbour_discovery() -> Result<()> {
 
         info!("Listening on {}", socket1.local_addr()?);
 
-        tokio::spawn(receiver(socket1));
-        tokio::spawn(announcer(socket2, false));
+        smol::spawn(receiver(socket1)).detach();
+        smol::spawn(announcer(socket2, false)).detach();
     }
     if v6 {
         let addr: SocketAddr = format!("[::1]:{}", port).parse()?;
@@ -187,8 +187,8 @@ pub async fn spawn_neighbour_discovery() -> Result<()> {
 
         info!("Listening on {}", socket1.local_addr()?);
 
-        tokio::spawn(receiver(socket1));
-        tokio::spawn(announcer(socket2, true));
+        smol::spawn(receiver(socket1)).detach();
+        smol::spawn(announcer(socket2, true)).detach();
     }
 
     Ok(())

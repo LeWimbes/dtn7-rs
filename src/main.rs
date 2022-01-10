@@ -16,8 +16,19 @@ mod core;
 mod dtnd;
 mod ipnd;
 
-#[tokio::main]
-async fn main() -> Result<(), std::io::Error> {
+fn main() -> smol::io::Result<()> {
+    esp_idf_sys::link_patches();
+    // esp_idf_sys::esp!(unsafe {
+    //     esp_idf_sys::esp_vfs_eventfd_register(&esp_idf_sys::esp_vfs_eventfd_config_t {
+    //         max_fds: 5,
+    //         ..Default::default()
+    //     })
+    // });
+
+    smol::block_on(run())
+}
+
+async fn run() -> Result<(), std::io::Error> {
     let mut cfg = DtnConfig::new();
 
     cfg.debug = false;

@@ -19,7 +19,7 @@ use crate::utils::{broadcast, CONFIG, DTNCORE, is_local_node_id, peer_find_by_re
 
 // transmit an outbound bundle.
 pub async fn send_bundle(bndl: Bundle) {
-    tokio::spawn(async move {
+    smol::spawn(async move {
         if let Err(err) = store_push_bundle(&bndl) {
             warn!("Transmission failed: {}", err);
             return;
@@ -27,7 +27,7 @@ pub async fn send_bundle(bndl: Bundle) {
         if let Err(err) = transmit(bndl.into()).await {
             warn!("Transmission failed: {}", err);
         }
-    });
+    }).detach();
 }
 
 // starts the transmission of an outbounding bundle pack. Therefore
@@ -316,7 +316,7 @@ pub async fn forward(mut bp: BundlePack) -> Result<()> {
             //let bp2 = bp.clone();
             let bundle_sent = std::sync::Arc::clone(&bundle_sent);
             let n = n.clone();
-            let task_handle = tokio::spawn(async move {
+            let task_handle = smol::spawn(async move {
                 info!(
                     "Sending bundle to a CLA: {} {} {}",
                     &bpid, n.remote, n.agent
@@ -338,7 +338,7 @@ pub async fn forward(mut bp: BundlePack) -> Result<()> {
                     // }
                 }
                 //drop(wg);
-            });
+            });//.detach();
             wg.push(task_handle);
         }
         use futures::future::join_all;

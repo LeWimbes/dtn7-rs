@@ -125,6 +125,6 @@ pub fn broadcast(bundle: &Bundle) {
             .unwrap();
         new_bndl.set_crc(bp7::crc::CRC_NO);
 
-        tokio::spawn(crate::core::processing::send_bundle(new_bndl));
+        smol::spawn(crate::core::processing::send_bundle(new_bndl)).detach();
     }
 }

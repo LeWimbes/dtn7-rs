@@ -2,7 +2,8 @@ use std::net::SocketAddr;
 
 use async_trait::async_trait;
 use bp7::ByteBuffer;
-use hyper::{Body, Method, Request};
+use embedded_svc::http::client::{Client, Request};
+use esp_idf_svc::http::client::EspHttpClient;
 use log::{debug, error};
 
 use crate::cla::ConvergenceLayerAgent;
@@ -30,21 +31,27 @@ impl ConvergenceLayerAgent for HttpConvergenceLayer {
     fn name(&self) -> &'static str {
         "http"
     }
+
+    #[cfg(feature = "native")]
     async fn scheduled_submission(&self, dest: &str, ready: &[ByteBuffer]) -> bool {
         debug!("Scheduled HTTP submission: {:?}", dest);
         if !ready.is_empty() {
-            let client = hyper::client::Client::new();
+            let client = EspHttpClient::new_default();
+            if let Err(err) = client {
+                error!("error pushing bundle to remote: {}", err);
+                return false;
+            }
+            let mut client = client.unwrap();
             let peeraddr: SocketAddr = dest.parse().unwrap();
             debug!("forwarding to {:?}", peeraddr);
             for b in ready {
                 let req_url = format!("http://{}:{}/push", peeraddr.ip(), peeraddr.port());
-                let req = Request::builder()
-                    .method(Method::POST)
-                    .uri(req_url)
-                    .header("content-type", "application/octet-stream")
-                    .body(Body::from(b.to_vec()))
-                    .unwrap();
-                if let Err(err) = client.request(req).await {
+                let post = client.post(&req_url);
+                if let Err(err) = post {
+                    error!("error pushing bundle to remote: {}", err);
+                    return false;
+                }
+                if let Err(err) = post.unwrap().send_bytes(b) {
                     error!("error pushing bundle to remote: {}", err);
                     return false;
                 }
