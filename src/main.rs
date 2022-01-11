@@ -16,16 +16,21 @@ mod core;
 mod dtnd;
 mod ipnd;
 
-fn main() -> smol::io::Result<()> {
+fn main() -> Result<(), String> {
     esp_idf_sys::link_patches();
-    // esp_idf_sys::esp!(unsafe {
-    //     esp_idf_sys::esp_vfs_eventfd_register(&esp_idf_sys::esp_vfs_eventfd_config_t {
-    //         max_fds: 5,
-    //         ..Default::default()
-    //     })
-    // });
+    if let Err(err) = esp_idf_sys::esp!(unsafe {
+        esp_idf_sys::esp_vfs_eventfd_register(&esp_idf_sys::esp_vfs_eventfd_config_t {
+            max_fds: 5,
+            ..Default::default()
+        })
+    }) {
+        return Err(format!("Error while registering eventfd: {}", err).to_string());
+    }
 
-    smol::block_on(run())
+    if let Err(_err) = smol::block_on(run()) {
+        return Err("Error running run!".to_string());
+    }
+    Ok(())
 }
 
 async fn run() -> Result<(), std::io::Error> {
