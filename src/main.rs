@@ -2,7 +2,17 @@
 
 use std::collections::HashMap;
 use std::convert::TryInto;
+use std::sync::Arc;
 
+use anyhow::bail;
+use anyhow::Result;
+use embedded_svc::ipv4;
+use embedded_svc::ping::Ping;
+use embedded_svc::wifi::{AccessPointConfiguration, ApIpStatus, ApStatus, ClientConfiguration, ClientConnectionStatus, ClientIpStatus, ClientStatus, Configuration, Status, Wifi};
+use esp_idf_svc::netif::EspNetifStack;
+use esp_idf_svc::nvs::EspDefaultNvs;
+use esp_idf_svc::sysloop::EspSysLoopStack;
+use esp_idf_svc::wifi::EspWifi;
 use log::info;
 
 use crate::dtnconfig::DtnConfig;
@@ -16,20 +26,111 @@ mod core;
 mod dtnd;
 mod ipnd;
 
-fn main() -> Result<(), String> {
+
+const SSID: &str = env!("DTN7_WIFI_SSID");
+const PASS: &str = env!("DTN7_WIFI_PASS");
+
+fn main() -> Result<()> {
     esp_idf_sys::link_patches();
-    if let Err(err) = esp_idf_sys::esp!(unsafe {
+    esp_idf_sys::esp!(unsafe {
         esp_idf_sys::esp_vfs_eventfd_register(&esp_idf_sys::esp_vfs_eventfd_config_t {
             max_fds: 5,
             ..Default::default()
         })
-    }) {
-        return Err(format!("Error while registering eventfd: {}", err).to_string());
+    })?;
+
+    let netif_stack = Arc::new(EspNetifStack::new()?);
+    let sys_loop_stack = Arc::new(EspSysLoopStack::new()?);
+    let default_nvs = Arc::new(EspDefaultNvs::new()?);
+    let wifi = wifi(
+        netif_stack.clone(),
+        sys_loop_stack.clone(),
+        default_nvs.clone(),
+    )?;
+
+    smol::block_on(run())?;
+
+    drop(wifi);
+    info!("Wifi stopped");
+    Ok(())
+}
+
+// taken from https://github.com/ivmarkov/rust-esp32-std-demo (Apache License 2.0)
+fn wifi(
+    netif_stack: Arc<EspNetifStack>,
+    sys_loop_stack: Arc<EspSysLoopStack>,
+    default_nvs: Arc<EspDefaultNvs>,
+) -> Result<Box<EspWifi>> {
+    let mut wifi = Box::new(EspWifi::new(netif_stack, sys_loop_stack, default_nvs)?);
+
+    info!("Wifi created, about to scan");
+
+    let ap_infos = wifi.scan()?;
+
+    let ours = ap_infos.into_iter().find(|a| a.ssid == SSID);
+
+    let channel = if let Some(ours) = ours {
+        info!(
+            "Found configured access point {} on channel {}",
+            SSID, ours.channel
+        );
+        Some(ours.channel)
+    } else {
+        info!(
+            "Configured access point {} not found during scanning, will go with unknown channel",
+            SSID
+        );
+        None
+    };
+
+    wifi.set_configuration(&Configuration::Mixed(
+        ClientConfiguration {
+            ssid: SSID.into(),
+            password: PASS.into(),
+            channel,
+            ..Default::default()
+        },
+        AccessPointConfiguration {
+            ssid: "aptest".into(),
+            channel: channel.unwrap_or(1),
+            ..Default::default()
+        },
+    ))?;
+
+    info!("Wifi configuration set, about to get status");
+
+    let status = wifi.get_status();
+
+    if let Status(
+        ClientStatus::Started(ClientConnectionStatus::Connected(ClientIpStatus::Done(ip_settings))),
+        ApStatus::Started(ApIpStatus::Done),
+    ) = status
+    {
+        info!("Wifi connected");
+
+        // ping(&ip_settings)?;
+    } else {
+        bail!("Unexpected Wifi status: {:?}", status);
     }
 
-    if let Err(_err) = smol::block_on(run()) {
-        return Err("Error running run!".to_string());
+    Ok(wifi)
+}
+
+// taken from https://github.com/ivmarkov/rust-esp32-std-demo (Apache License 2.0)
+fn ping(ip_settings: &ipv4::ClientSettings) -> Result<()> {
+    info!("About to do some pings for {:?}", ip_settings);
+
+    let ping_summary =
+        esp_idf_svc::ping::EspPing::default().ping(ip_settings.subnet.gateway, &Default::default())?;
+    if ping_summary.transmitted != ping_summary.received {
+        bail!(
+            "Pinging gateway {} resulted in timeouts",
+            ip_settings.subnet.gateway
+        );
     }
+
+    info!("Pinging done");
+
     Ok(())
 }
 
