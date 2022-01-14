@@ -108,7 +108,7 @@ fn wifi(
     {
         info!("Wifi connected");
 
-        // ping(&ip_settings)?;
+        ping(&ip_settings)?;
     } else {
         bail!("Unexpected Wifi status: {:?}", status);
     }
@@ -116,16 +116,21 @@ fn wifi(
     Ok(wifi)
 }
 
-// taken from https://github.com/ivmarkov/rust-esp32-std-demo (Apache License 2.0)
+// based on https://github.com/ivmarkov/rust-esp32-std-demo (Apache License 2.0)
 fn ping(ip_settings: &ipv4::ClientSettings) -> Result<()> {
     info!("About to do some pings for {:?}", ip_settings);
 
     let ping_summary =
         esp_idf_svc::ping::EspPing::default().ping(ip_settings.subnet.gateway, &Default::default())?;
-    if ping_summary.transmitted != ping_summary.received {
+    if (ping_summary.received as f32) / (ping_summary.transmitted as f32) < 0.5 {
         bail!(
-            "Pinging gateway {} resulted in timeouts",
-            ip_settings.subnet.gateway
+            "Pinging gateway {} resulted in to many timeouts ({}/{})",
+            ip_settings.subnet.gateway, ping_summary.received, ping_summary.transmitted
+        );
+    } else if ping_summary.transmitted != ping_summary.received {
+        info!(
+            "Pinging gateway {} resulted in some timeouts ({}/{})",
+            ip_settings.subnet.gateway, ping_summary.received, ping_summary.transmitted
         );
     }
 
