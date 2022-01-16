@@ -32,7 +32,6 @@ impl ConvergenceLayerAgent for HttpConvergenceLayer {
         "http"
     }
 
-    #[cfg(feature = "native")]
     async fn scheduled_submission(&self, dest: &str, ready: &[ByteBuffer]) -> bool {
         debug!("Scheduled HTTP submission: {:?}", dest);
         if !ready.is_empty() {
