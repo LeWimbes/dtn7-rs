@@ -34,7 +34,7 @@ async fn main() -> Result<(), std::io::Error> {
     }
     pretty_env_logger::init_timed();
 
-    cfg.host_eid = "dtn://n1".try_into().unwrap();
+    cfg.host_eid = "dtn://broadcaster".try_into().unwrap();
     cfg.endpoints.push("in".to_string());
     cfg.routing = "epidemic".into();
 
