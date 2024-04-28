@@ -13,7 +13,7 @@ In the end, I was not able to run and test this project on an ESP32 because of t
 
 ### Usage
 
-While the `esp` branch hosts the version that successfully compiles for the ESP32, the `master` branch contains a
+While the `dtn7-esp` branch hosts the version that successfully compiles for the ESP32, the `dtn7-esp-x86` branch contains a
 version which compiles for an x86 system. This version still uses `hyper`, `axum` and in some parts `tokio` and provides
 a working broadcast node.
 
