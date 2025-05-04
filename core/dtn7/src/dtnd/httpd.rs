@@ -750,6 +750,8 @@ async fn download_hex(
     }
 }
 
+const WS_LIMIT: usize = 512 * 1024 * 1024;
+
 pub async fn spawn_httpd() -> Result<()> {
     let cors = CorsLayer::new()
         // allow `GET` and `POST` when accessing the resource
@@ -775,8 +777,8 @@ pub async fn spawn_httpd() -> Result<()> {
         .route(
             "/ws",
             get(|ws: WebSocketUpgrade| async move {
-                ws.max_message_size(128 * 1024 * 1024)
-                    .max_frame_size(128 * 1024 * 1024)
+                ws.max_frame_size(WS_LIMIT)
+                    .max_message_size(WS_LIMIT) // Set max message size to 512MiB
                     .on_upgrade(super::ws::handle_socket)
             }),
         )
@@ -789,7 +791,9 @@ pub async fn spawn_httpd() -> Result<()> {
         app_local_only = app_local_only.route(
             "/ws/erouting",
             get(|ws: WebSocketUpgrade| async move {
-                ws.on_upgrade(crate::routing::erouting::processing::handle_connection)
+                ws.max_frame_size(WS_LIMIT)
+                    .max_message_size(WS_LIMIT) // Set max message size to 512MiB
+                    .on_upgrade(crate::routing::erouting::processing::handle_connection)
             }),
         )
     }
@@ -798,7 +802,9 @@ pub async fn spawn_httpd() -> Result<()> {
         app_local_only = app_local_only.route(
             "/ws/ecla",
             get(|ws: WebSocketUpgrade| async move {
-                ws.on_upgrade(crate::cla::ecla::ws::handle_connection)
+                ws.max_frame_size(WS_LIMIT)
+                    .max_message_size(WS_LIMIT) // Set max message size to 512MiB
+                    .on_upgrade(crate::cla::ecla::ws::handle_connection)
             }),
         )
     }
