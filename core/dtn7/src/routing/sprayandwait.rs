@@ -27,7 +27,7 @@ pub struct SaWBundleData {
 }
 
 /// The default number of copies that are can be sent to peers.
-const MAX_COPIES: usize = 7;
+const MAX_COPIES: usize = 1;
 
 struct SprayAndWaitRoutingAgentCore {
     /// the number of copies we have left to spread
