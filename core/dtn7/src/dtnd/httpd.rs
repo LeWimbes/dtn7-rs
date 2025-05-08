@@ -750,7 +750,8 @@ async fn download_hex(
     }
 }
 
-const WS_LIMIT: usize = 512 * 1024 * 1024;
+// 2GiB
+const WS_LIMIT: usize = 2 * 1024 * 1024 * 1024;
 
 pub async fn spawn_httpd() -> Result<()> {
     let cors = CorsLayer::new()
