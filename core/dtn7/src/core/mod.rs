@@ -162,9 +162,10 @@ pub async fn process_peers() {
                 v.eid, v.addr
             );
 
-            dropped.push(v.eid.clone());
+            //dropped.push(v.eid.clone());
         }
-        v.con_type == PeerType::Static || val
+        //v.con_type == PeerType::Static || val
+        true
     });
 
     for eid in dropped {
