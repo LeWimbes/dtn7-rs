@@ -50,7 +50,7 @@ use tokio::time::Duration;
 
 type SessionMap = HashMap<SocketAddr, mpsc::Sender<(ByteBuffer, oneshot::Sender<TransferResult>)>>;
 
-const KEEPALIVE: u16 = 30;
+const KEEPALIVE: u16 = 60 * 60;
 const SEGMENT_MRU: u64 = 64000;
 const TRANSFER_MRU: u64 = 64000;
 const INTERNAL_CHANNEL_BUFFER: usize = 200;
