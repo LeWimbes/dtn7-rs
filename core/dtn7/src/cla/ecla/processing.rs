@@ -76,7 +76,7 @@ pub fn generate_beacon() -> Beacon {
             service_block.add_custom_service(*tag, &payload.1);
         });
 
-    beacon.service_block = serde_cbor::to_vec(&service_block).unwrap();
+    beacon.service_block = minicbor_serde::to_vec(&service_block).unwrap();
 
     beacon
 }
@@ -205,7 +205,7 @@ pub fn handle_packet(connector_name: String, addr: String, packet: Packet) {
             // client implements.
             Packet::Beacon(pdp) => {
                 let service_block: ServiceBlock =
-                    serde_cbor::from_slice(pdp.service_block.as_slice()).unwrap();
+                    minicbor_serde::from_slice(pdp.service_block.as_slice()).unwrap();
 
                 debug!(
                     "Received beacon: ecla={} eid={} addr={} service_block={}",

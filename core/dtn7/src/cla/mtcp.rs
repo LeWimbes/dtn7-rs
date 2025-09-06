@@ -138,7 +138,7 @@ impl Encoder<MPDU> for MPDUCodec {
     type Error = io::Error;
 
     fn encode(&mut self, item: MPDU, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        let buf = serde_cbor::to_vec(&item).unwrap();
+        let buf = minicbor_serde::to_vec(&item).unwrap();
         dst.reserve(buf.len());
         dst.put_slice(&buf);
         Ok(())
@@ -171,7 +171,7 @@ impl Decoder for MPDUCodec {
                             "Invalid MPDU data (terminator not found)",
                         ));
                     }
-                    if let Ok(res) = serde_cbor::from_slice(&buf[0..=expected_pos]) {
+                    if let Ok(res) = minicbor_serde::from_slice(&buf[0..=expected_pos]) {
                         buf.advance(expected_pos + 1);
                         self.last_pos = 0;
                         return Ok(Some(res));
@@ -218,7 +218,7 @@ pub fn mtcp_send_bundles(addr: SocketAddr, bundles: Vec<ByteBuffer>) -> Transfer
     let mut buf = Vec::new();
     for b in bundles {
         let mpdu = MPDU(b);
-        if let Ok(buf2) = serde_cbor::to_vec(&mpdu) {
+        if let Ok(buf2) = minicbor_serde::to_vec(&mpdu) {
             buf.extend_from_slice(&buf2);
         } else {
             error!("MPDU encoding error!");
@@ -357,7 +357,7 @@ impl MtcpConvergenceLayer {
         let mut buf = Vec::new();
         for b in bundles {
             let mpdu = MPDU(b);
-            if let Ok(buf2) = serde_cbor::to_vec(&mpdu) {
+            if let Ok(buf2) = minicbor_serde::to_vec(&mpdu) {
                 buf.extend_from_slice(&buf2);
             } else {
                 error!("MPDU encoding error!");

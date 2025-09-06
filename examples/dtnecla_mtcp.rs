@@ -212,7 +212,7 @@ async fn main() -> Result<()> {
 
                     if let Ok(bndl) = Bundle::try_from(fwd.data) {
                         let mpdu = MPDU::new(&bndl);
-                        if let Ok(buf) = serde_cbor::to_vec(&mpdu) {
+                        if let Ok(buf) = minicbor_serde::to_vec(&mpdu) {
                             send_bundle(fwd.dst, buf);
                         } else {
                             error!("MPDU encoding error!");

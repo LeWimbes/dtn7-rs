@@ -250,53 +250,39 @@ impl<'de> Deserialize<'de> for Beacon {
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(3, &self))?;
 
-                // If there are no more elements inside the sequence the received Beacon did not contain
-                // a BeaconPeriod and a ServiceBlock
-                if seq.size_hint().unwrap() == 0 {
-                    Ok(Beacon {
-                        version,
-                        flags,
-                        eid,
-                        beacon_sequence_number,
-                        service_block: ServiceBlock::new(),
-                        beacon_period: None,
-                    })
+                // Decode optional fields based on flags; do not rely on size_hint()
+                let has_service = (flags & SERVICE_BLOCK_PRESENT) == SERVICE_BLOCK_PRESENT;
+                let has_period = (flags & BEACON_PERIOD_PRESENT) == BEACON_PERIOD_PRESENT;
 
-                // If there is exactly one element left inside the sequence it has to be either a BeaconPeriod or a ServiceBlock
-                // Check for it by looking at the flags
-                } else if seq.size_hint().unwrap() == 1 {
-                    if (flags & SERVICE_BLOCK_PRESENT) == SERVICE_BLOCK_PRESENT {
-                        Ok(Beacon {
-                            version,
-                            flags,
-                            eid,
-                            beacon_sequence_number,
-                            service_block: seq.next_element()?.unwrap(),
-                            beacon_period: None,
-                        })
-                    } else {
-                        Ok(Beacon {
-                            version,
-                            flags,
-                            eid,
-                            beacon_sequence_number,
-                            service_block: ServiceBlock::new(),
-                            beacon_period: Some(Duration::from_secs(seq.next_element()?.unwrap())),
-                        })
-                    }
+                let service_block: ServiceBlock = if has_service {
+                    seq.next_element()?
+                        .ok_or_else(|| de::Error::invalid_length(4, &self))?
                 } else {
-                    // Default branch executed when a 'full' Beacon is received, meaning a Beacon with BeaconPeriod AND ServiceBlock
-                    let service_block = seq.next_element()?.unwrap();
-                    let beacon_period = Some(Duration::from_secs(seq.next_element()?.unwrap()));
-                    Ok(Beacon {
-                        version,
-                        flags,
-                        eid,
-                        beacon_sequence_number,
-                        service_block,
-                        beacon_period,
-                    })
+                    ServiceBlock::new()
+                };
+
+                let beacon_period: Option<Duration> = if has_period {
+                    let secs: u64 = seq
+                        .next_element()?
+                        .ok_or_else(|| de::Error::invalid_length(5, &self))?;
+                    Some(Duration::from_secs(secs))
+                } else {
+                    None
+                };
+
+                // Ensure no unexpected extras
+                if seq.next_element::<serde::de::IgnoredAny>()?.is_some() {
+                    return Err(de::Error::custom("unexpected extra elements in Beacon"));
                 }
+
+                Ok(Beacon {
+                    version,
+                    flags,
+                    eid,
+                    beacon_sequence_number,
+                    service_block,
+                    beacon_period,
+                })
             }
         }
 
@@ -307,6 +293,6 @@ impl<'de> Deserialize<'de> for Beacon {
 // Shortcut method to serialize a Beacon
 impl Block for Beacon {
     fn to_cbor(&self) -> ByteBuffer {
-        serde_cbor::to_vec(&self).expect("Error exporting Beacon to cbor")
+        minicbor_serde::to_vec(self).expect("Error exporting Beacon to cbor")
     }
 }

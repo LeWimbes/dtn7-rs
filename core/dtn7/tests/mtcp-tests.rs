@@ -29,7 +29,7 @@ fn mpdu_encoding() {
     println!("{:02x?}", b.to_cbor());
 
     let mpdu = mtcp::MPDU::new(&b);
-    let mpdu_encoded = serde_cbor::to_vec(&mpdu).expect("MPDU encoding error");
+    let mpdu_encoded = minicbor_serde::to_vec(&mpdu).expect("MPDU encoding error");
 
     println!("{:02x?}", mpdu_encoded);
 

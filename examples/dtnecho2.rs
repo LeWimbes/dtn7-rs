@@ -81,7 +81,7 @@ fn main() -> Result<()> {
             Message::Binary(bin) => {
                 let now = Instant::now();
                 let recv_data: WsRecvData =
-                    serde_cbor::from_slice(bin).expect("Error decoding WsRecvData from server");
+                    minicbor_serde::from_slice(bin).expect("Error decoding WsRecvData from server");
 
                 if args.verbose {
                     eprintln!(
@@ -108,7 +108,7 @@ fn main() -> Result<()> {
                     data: recv_data.data,
                 };
                 wscon
-                    .write_binary(serde_cbor::to_vec(&echo_response)?)
+                    .write_binary(minicbor_serde::to_vec(&echo_response)?)
                     .expect("error sending echo response");
                 if args.verbose {
                     println!("Processing bundle took {:?}", now.elapsed());

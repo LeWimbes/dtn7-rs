@@ -280,19 +280,24 @@ impl<'de> Deserialize<'de> for ServiceBlock {
             where
                 V: SeqAccess<'de>,
             {
-                if seq.size_hint().unwrap() < 1 {
-                    Ok(ServiceBlock::new())
-                } else {
-                    let clas = seq
-                        .next_element()?
-                        .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                if let Some(clas) = seq.next_element()? {
                     let services = seq
                         .next_element()?
                         .ok_or_else(|| de::Error::invalid_length(0, &self))?;
-                    let mut service_block = ServiceBlock::new();
-                    service_block.set_clas(clas);
-                    service_block.set_services(services);
-                    Ok(service_block)
+
+                    // Ensure no unexpected extras
+                    if seq.next_element::<serde::de::IgnoredAny>()?.is_some() {
+                        return Err(de::Error::custom(
+                            "unexpected extra elements in ServiceBlock",
+                        ));
+                    }
+
+                    let mut sb = ServiceBlock::new();
+                    sb.set_clas(clas);
+                    sb.set_services(services);
+                    Ok(sb)
+                } else {
+                    Ok(ServiceBlock::new())
                 }
             }
         }

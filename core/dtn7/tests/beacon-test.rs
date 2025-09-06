@@ -55,7 +55,7 @@ pub fn bsn_overflow() {
 pub fn plain_serialization() {
     let eid = EndpointID::try_from("dtn://n1/").unwrap();
     let beacon = Beacon::new(eid);
-    let serialized = serde_cbor::to_vec(&beacon);
+    let serialized = minicbor_serde::to_vec(&beacon);
     let unwrapped = serialized.expect("Error");
 
     for e in &unwrapped {
@@ -64,7 +64,7 @@ pub fn plain_serialization() {
     println!("Beacon size: {}", &unwrapped.len());
     println!();
 
-    let deserialized: Beacon = match serde_cbor::from_slice(&unwrapped) {
+    let deserialized: Beacon = match minicbor_serde::from_slice(&unwrapped) {
         Ok(pkt) => pkt,
         Err(e) => {
             println!("{}", e);
@@ -96,7 +96,7 @@ pub fn serialization_with_service_block() {
     service_block.add_cla(&third.0, &third.1);
     let beacon = Beacon::with_config(eid, service_block, None);
 
-    let serialized = serde_cbor::to_vec(&beacon);
+    let serialized = minicbor_serde::to_vec(&beacon);
     let unwrapped = serialized.expect("Error");
 
     for e in &unwrapped {
@@ -107,7 +107,7 @@ pub fn serialization_with_service_block() {
     println!("{}", &unwrapped.len());
     println!();
 
-    let deserialized: Beacon = match serde_cbor::from_slice(&unwrapped) {
+    let deserialized: Beacon = match minicbor_serde::from_slice(&unwrapped) {
         Ok(pkt) => pkt,
         Err(e) => panic!("deserialization error: {}", e),
     };
@@ -129,7 +129,7 @@ pub fn serialization_with_beacon_period() {
     let eid = EndpointID::try_from("dtn://n1/").unwrap();
     let beacon = Beacon::with_config(eid, ServiceBlock::new(), Some(Duration::from_secs(5)));
 
-    let serialized = serde_cbor::to_vec(&beacon);
+    let serialized = minicbor_serde::to_vec(&beacon);
     let unwrapped = serialized.expect("Error");
 
     for e in &unwrapped {
@@ -139,7 +139,7 @@ pub fn serialization_with_beacon_period() {
     println!();
     println!("Beacon size: {}", &unwrapped.len());
 
-    let deserialized: Beacon = match serde_cbor::from_slice(&unwrapped) {
+    let deserialized: Beacon = match minicbor_serde::from_slice(&unwrapped) {
         Ok(pkt) => pkt,
         Err(e) => {
             println!("{}", e);
@@ -166,7 +166,7 @@ pub fn serialization_with_full_config() {
     let beacon_period = Some(Duration::from_secs(2));
     let beacon = Beacon::with_config(eid, service_block, beacon_period);
 
-    let serialized = serde_cbor::to_vec(&beacon);
+    let serialized = minicbor_serde::to_vec(&beacon);
     let unwrapped = serialized.expect("Error");
 
     for e in &unwrapped {
@@ -176,7 +176,7 @@ pub fn serialization_with_full_config() {
     println!();
     println!("Packet size: {}", unwrapped.len());
 
-    let deserialized: Beacon = match serde_cbor::from_slice(&unwrapped) {
+    let deserialized: Beacon = match minicbor_serde::from_slice(&unwrapped) {
         Ok(pkt) => pkt,
         Err(e) => {
             println!("{}", e);
@@ -199,12 +199,13 @@ pub fn check_if_deserialized_is_equal_to_before() {
     }
 
     for x in &beacons {
-        serialized.push(serde_cbor::to_vec(x).expect("A problem occurred while serializing"));
+        serialized.push(minicbor_serde::to_vec(x).expect("A problem occurred while serializing"));
     }
 
     let mut deserialized: Vec<Beacon> = Vec::new();
     for x in serialized {
-        deserialized.push(serde_cbor::from_slice::<Beacon>(&x).expect("Something bad happened"));
+        deserialized
+            .push(minicbor_serde::from_slice::<Beacon>(&x).expect("Something bad happened"));
     }
 
     for i in 0..beacons.len() {
@@ -265,7 +266,7 @@ pub fn check_time_for_serialization_of_5000_beacons() {
     let starts = now.elapsed().unwrap().as_nanos();
     println!("Starting serialization after {}ns", starts);
     for x in beacons {
-        serde_cbor::to_vec(&x).expect("A problem occured while serializing");
+        minicbor_serde::to_vec(&x).expect("A problem occured while serializing");
     }
     let afters = now.elapsed().unwrap().as_nanos();
 
@@ -283,13 +284,13 @@ pub fn check_time_for_deserialization_of_5000_beacons() {
     }
 
     for x in beacons {
-        serialized.push(serde_cbor::to_vec(&x).expect("A problem occured while serializing"));
+        serialized.push(minicbor_serde::to_vec(&x).expect("A problem occured while serializing"));
     }
     let now = SystemTime::now();
     let startd = now.elapsed().unwrap().as_nanos();
     println!("Starting deserialization after: {}ns", startd);
     for x in serialized {
-        serde_cbor::from_slice::<Beacon>(&x).expect("Something bad happened");
+        minicbor_serde::from_slice::<Beacon>(&x).expect("Something bad happened");
     }
     let afterd = now.elapsed().unwrap().as_nanos();
     println!("Deserialization finished after: {}ns", afterd - startd);

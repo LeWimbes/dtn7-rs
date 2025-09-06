@@ -19,7 +19,7 @@ async fn receiver(socket: UdpSocket) -> Result<(), io::Error> {
     loop {
         if let Ok((size, peer)) = socket.recv_from(&mut buf).await {
             trace!("received {} bytes", size);
-            let deserialized: Beacon = match serde_cbor::from_slice(&buf[..size]) {
+            let deserialized: Beacon = match minicbor_serde::from_slice(&buf[..size]) {
                 Ok(pkt) => pkt,
                 Err(e) => {
                     error!("Deserialization of beacon failed: {}", e);
@@ -122,7 +122,7 @@ async fn announcer(socket: UdpSocket, _v6: bool) {
                 );
             }
             match socket
-                .send_to(&serde_cbor::to_vec(&pkt).unwrap(), destination)
+                .send_to(&minicbor_serde::to_vec(&pkt).unwrap(), destination)
                 .await
             {
                 Ok(amt) => {

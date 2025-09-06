@@ -565,7 +565,7 @@ fn is_administrative_record_valid(bundle: &Bundle) -> bool {
     }
     match payload.unwrap().data() {
         bp7::canonical::CanonicalData::Data(data) => {
-            match serde_cbor::from_slice::<AdministrativeRecord>(data) {
+            match minicbor_serde::from_slice::<AdministrativeRecord>(data) {
                 Ok(ar) => {
                     info!(
                         "Received bundle contains an administrative record: {} {:?}",
