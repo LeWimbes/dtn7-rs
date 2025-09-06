@@ -1,5 +1,6 @@
 use anyhow::{Result, bail};
 use clap::Parser;
+use dtn7::core::helpers;
 use dtn7_plus::client::{DtnClient, DtnWsConnection};
 use dtn7_plus::client::{Message, WsRecvData, WsSendData};
 use humantime::parse_duration;
@@ -38,7 +39,7 @@ fn send_ping(
         lifetime: 3600 * 24 * 1000,
         data: payload.as_bytes().to_vec(),
     };
-    wscon.write_binary(serde_cbor::to_vec(&ping)?)
+    wscon.write_binary(helpers::to_cbor_vec(&ping)?)
 }
 
 /// A simple Bundle Protocol 7 Ping Tool for Delay Tolerant Networking
@@ -174,7 +175,7 @@ fn main() -> Result<()> {
             }
             Message::Binary(bin) => {
                 let recv_data: WsRecvData =
-                    serde_cbor::from_slice(bin).expect("Error decoding WsRecvData from server");
+                    helpers::from_cbor_slice(bin).expect("Error decoding WsRecvData from server");
 
                 println!("[<] #{} : {:?}", seq_num, sent_time.elapsed());
                 successful_pings += 1;

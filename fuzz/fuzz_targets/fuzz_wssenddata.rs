@@ -4,5 +4,5 @@ use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
     // fuzzed code goes here
-    serde_cbor::from_slice::<WsSendData>(&data);
+    helpers::from_cbor_slice::<WsSendData>(&data);
 });

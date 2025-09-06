@@ -2,6 +2,7 @@ use crate::CONFIG;
 use crate::DTNCORE;
 use crate::STATS;
 use crate::core::application_agent::ApplicationAgent;
+use crate::core::helpers;
 
 use anyhow::{Result, bail};
 use axum::extract::ws::{Message, WebSocket};
@@ -205,7 +206,7 @@ impl WsAASession {
                 };
                 match format {
                     DataReceiveFormat::CBOR => {
-                        serde_cbor::to_vec(&recv).expect("Fatal error encoding WsRecvData")
+                        helpers::to_cbor_vec(&recv).expect("Fatal error encoding WsRecvData")
                     }
                     DataReceiveFormat::JSON => {
                         serde_json::to_vec(&recv).expect("Fatal error encoding WsRecvData")
@@ -348,7 +349,7 @@ impl WsAASession {
             Message::Binary(bin) => {
                 match self.mode {
                     WsReceiveMode::Bundle => {
-                        if let Ok(bndl) = serde_cbor::from_slice::<bp7::Bundle>(&bin) {
+                        if let Ok(bndl) = helpers::from_cbor_slice::<bp7::Bundle>(&bin) {
                             debug!(
                                 "Sending bundle {} to {} from WS",
                                 bndl.id(),
@@ -375,7 +376,7 @@ impl WsAASession {
                     WsReceiveMode::Data(format) => {
                         // TODO: make BPCF configurable via WsSendData
                         let send_data = match format {
-                            DataReceiveFormat::CBOR => serde_cbor::from_slice::<WsSendData>(&bin)
+                            DataReceiveFormat::CBOR => helpers::from_cbor_slice::<WsSendData>(&bin)
                                 .map_err(|_| "error parsing cbor"),
                             DataReceiveFormat::JSON => serde_json::from_slice::<WsSendData>(&bin)
                                 .map_err(|_| "error parsing json"),
@@ -492,7 +493,7 @@ impl WsAASession {
                                     data: bundle.payload().unwrap().to_vec(),
                                 };
                                 match format {
-                                    DataReceiveFormat::CBOR => serde_cbor::to_vec(&recv)
+                                    DataReceiveFormat::CBOR => helpers::to_cbor_vec(&recv)
                                         .expect("Fatal error encoding WsRecvData"),
                                     DataReceiveFormat::JSON => serde_json::to_vec(&recv)
                                         .expect("Fatal error encoding WsRecvData"),

@@ -3,6 +3,7 @@ use bp7::Bundle;
 use clap::{Arg, ArgAction, Command as ClapCommand, crate_authors, crate_version, value_parser};
 use dtn7::cla::mtcp::{MPDU, MPDUCodec};
 use dtn7::client::ecla::{Command, ForwardData, Packet, ws_client};
+use dtn7::core::helpers;
 use futures_util::future::Either;
 use futures_util::{StreamExt, future, pin_mut};
 use lazy_static::lazy_static;
@@ -212,7 +213,7 @@ async fn main() -> Result<()> {
 
                     if let Ok(bndl) = Bundle::try_from(fwd.data) {
                         let mpdu = MPDU::new(&bndl);
-                        if let Ok(buf) = serde_cbor::to_vec(&mpdu) {
+                        if let Ok(buf) = helpers::to_cbor_vec(&mpdu) {
                             send_bundle(fwd.dst, buf);
                         } else {
                             error!("MPDU encoding error!");

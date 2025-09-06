@@ -4,6 +4,7 @@ use serde::ser::{SerializeSeq, Serializer};
 use serde::{Deserialize, Deserializer, Serialize, de};
 use std::{fmt::Debug, time::Duration};
 
+use crate::core::helpers;
 use crate::ipnd::services::ServiceBlock;
 use bp7::{ByteBuffer, EndpointID, bundle::Block};
 
@@ -307,6 +308,6 @@ impl<'de> Deserialize<'de> for Beacon {
 // Shortcut method to serialize a Beacon
 impl Block for Beacon {
     fn to_cbor(&self) -> ByteBuffer {
-        serde_cbor::to_vec(&self).expect("Error exporting Beacon to cbor")
+        helpers::to_cbor_vec(&self).expect("Error exporting Beacon to cbor")
     }
 }
