@@ -535,7 +535,7 @@ pub async fn forward(mut bp: BundlePack) -> Result<()> {
                 hc_count -= 1;
                 hc.set_data(bp7::canonical::CanonicalData::HopCount(hc_limit, hc_count));
                 debug!(
-                    "Bundle's hop count block was resetted: {} {} {}",
+                    "Bundle's hop count block was reset: {} {} {}",
                     &bpid, hc_limit, hc_count
                 );
             }

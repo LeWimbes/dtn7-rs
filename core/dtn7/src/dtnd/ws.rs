@@ -41,7 +41,7 @@ pub enum DataReceiveFormat {
     JSON,
 }
 
-/// WebSocket Applicatin Agent Session
+/// WebSocket Application Agent Session
 #[derive(Debug, Clone)]
 pub struct WsAASession {
     /// Client must send ping at least once per 10 seconds (CLIENT_TIMEOUT),
@@ -188,7 +188,7 @@ impl WsAASession {
             WsReceiveMode::Data(format) => {
                 if bndl.payload().is_none() {
                     // No payload -> nothing to deliver to client
-                    // In bundle mode delivery happens because custom canoncial bocks could be present
+                    // In bundle mode delivery happens because custom canonical blocks could be present
                     return Ok(());
                 }
                 let recv = WsRecvData {
@@ -478,7 +478,7 @@ impl WsAASession {
                             WsReceiveMode::Data(format) => {
                                 if bundle.payload().is_none() {
                                     // No payload -> nothing to deliver to client
-                                    // In bundle mode delivery happens because custom canoncial bocks could be present
+                                    // In bundle mode delivery happens because custom canonical blocks could be present
                                     continue;
                                 }
                                 let recv = WsRecvData {
