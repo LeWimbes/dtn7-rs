@@ -25,12 +25,16 @@ if [ -n "$1" ]; then
 	
 	sed "s/^version = .* $msg$/version = \"${1#v}\" $msg/" -i core/dtn7/Cargo.toml
 	# update the version in examples/Cargo.toml for dtn7
-	sed "s/^dtn7 = .* $msg$/dtn7 = { path = \"..\/core\/dtn7\", default-features = false, version = \"${1#v}\"} $msg/" -i examples/Cargo.toml
+	# (only the version string is replaced, so indentation and the other keys are kept)
+	sed "s/^\(\s*dtn7 = .*version = \)\"[^\"]*\"\(.* $msg\)$/\1\"${1#v}\"\2/" -i examples/Cargo.toml
 
 	# update the changelog
 	git cliff --tag "$1" > CHANGELOG.md
 	sleep 1
-	cargo check
+	if ! cargo check; then
+		echo "cargo check failed, not committing the release"
+		exit 1
+	fi
 	git add -A && git commit -m "chore(release): prepare for $1"
 	git show
 	# generate a changelog for the tag message
