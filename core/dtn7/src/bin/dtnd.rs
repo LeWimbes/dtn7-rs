@@ -279,7 +279,7 @@ Tag 255 takes 5 arguments and is interpreted as address. Usage: -S 255:'Samplest
                 .help("Reject bundles without primary block CRC that are not protected by a BIB, as created by older dtn7 versions (default: deactivated)")
                 .action(ArgAction::SetTrue),
         ).arg(
-            Arg::new("parallel-bundle-processing")                
+            Arg::new("parallel-bundle-processing")
                 .long("parallel-bundle-processing")
                 .help("(Re-)Process bundles in parallel, can cause congestion but might be faster (default: deactivated)")
                 .action(ArgAction::SetTrue),

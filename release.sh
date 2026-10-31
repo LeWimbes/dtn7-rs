@@ -19,10 +19,10 @@ elif [[ "$OSTYPE" == "freebsd"* ]]; then
 fi
 
 # takes the tag as an argument (e.g. v0.1.0)
-if [ -n "$1" ]; then	
+if [ -n "$1" ]; then
 	# update the version
 	msg="# managed by release.sh"
-	
+
 	sed "s/^version = .* $msg$/version = \"${1#v}\" $msg/" -i core/dtn7/Cargo.toml
 	# update the version in examples/Cargo.toml for dtn7
 	# (only the version string is replaced, so indentation and the other keys are kept)
@@ -46,7 +46,7 @@ if [ -n "$1" ]; then
 	{% endfor %}
 	{% endfor %}"
 	changelog=$(git cliff --unreleased --strip all)
-	
+
 	git tag -a "$1" -m "Release $1" -m "$changelog"
 	read -p "Directly push to GitHub? " -n 1 -r
 	echo    # (optional) move to a new line

@@ -19,7 +19,7 @@ pub enum RoutingNotification {
     IncomingBundleWithoutPreviousNode(String, String),
     EncounteredPeer(EndpointID),
     DroppedPeer(EndpointID),
-    
+
     // Our new notification
     NewNotification(String, i32)
 }

@@ -83,11 +83,11 @@ jobs:
         shell: bash
         run: |
           mkdir -p release/examples
-          mkdir -p release/bin                   
+          mkdir -p release/bin
           cp {LICENSE*,COPYRIGHT,README.md,CHANGELOG.md} release/
-          cp -r doc release/doc          
+          cp -r doc release/doc
           cp target/${{ matrix.TARGET }}/release/{dtnd,dtntrigger,dtnsend,dtnrecv,dtnquery} release/bin
-          cp target/${{ matrix.TARGET }}/release/examples/{dtnping,dtnecho2} release/examples          
+          cp target/${{ matrix.TARGET }}/release/examples/{dtnping,dtnecho2} release/examples
           mv release/ dtn7-${{ env.RELEASE_VERSION }}/
       - name: Create release artifacts
         shell: bash
