@@ -21,7 +21,7 @@ use crate::{RoutingNotifcation, CONFIG};
 use crate::{PEERS, STATS, STORE};
 use application_agent::ApplicationAgent;
 use bp7::EndpointID;
-use log::{error, warn, info, trace};
+use log::{error, info, trace, warn};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Instant;
