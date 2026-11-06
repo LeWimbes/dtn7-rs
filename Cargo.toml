@@ -3,7 +3,7 @@
 strip = true # Automatically strip symbols from the binary.
 
 [workspace]
-resolver = "2"
+resolver = "3"
 
 members = [
     "core/codegen",
@@ -12,3 +12,6 @@ members = [
     # internal
     "examples",
 ]
+
+[workspace.package]
+rust-version = "1.89"
