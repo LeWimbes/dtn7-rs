@@ -150,17 +150,16 @@ async fn handle_mdns_event(event: mdns_sd::ServiceEvent) -> Result<()> {
             // Touch peer to keep it alive (mDNS announces service existence)
             // Note: This event fires before ServiceResolved, so the peer might not exist yet
             debug!("mDNS ServiceFound event (keepalive): {}", fullname);
-            if let Some(instance_name) = fullname.split('.').next() {
-                // Extract node name from EID (e.g., "dtn://node1/" -> "node1")
-                let node_name = instance_name
-                    .strip_prefix("dtn://")
-                    .and_then(|name| name.strip_suffix('/'))
-                    .unwrap_or(instance_name);
+            let instance_name = mdns_sd::instance_name_unescaped(&fullname);
+            // Extract node name from EID (e.g., "dtn://node1/" -> "node1")
+            let node_name = instance_name
+                .strip_prefix("dtn://")
+                .and_then(|name| name.strip_suffix('/'))
+                .unwrap_or(&instance_name);
 
-                // Silently ignore if peer doesn't exist yet - ServiceResolved will add it
-                if peers_touch(node_name).is_ok() {
-                    debug!("Successfully touched peer: {}", node_name);
-                }
+            // Silently ignore if peer doesn't exist yet - ServiceResolved will add it
+            if peers_touch(node_name).is_ok() {
+                debug!("Successfully touched peer: {}", node_name);
             }
         }
         ServiceEvent::SearchStarted(_) => {
@@ -287,13 +286,10 @@ async fn handle_mdns_peer_discovered(info: &mdns_sd::ResolvedService) -> Result<
 
 async fn handle_mdns_peer_removed(fullname: &str) -> Result<()> {
     // Extract instance name (nodeid) from fullname
-    let instance = fullname
-        .split('.')
-        .next()
-        .ok_or_else(|| anyhow::anyhow!("Invalid mDNS fullname"))?;
+    let instance = mdns_sd::instance_name_unescaped(fullname);
 
     info!("Removing peer discovered via mDNS: {}", instance);
-    peers_remove(instance);
+    peers_remove(&instance);
 
     Ok(())
 }
